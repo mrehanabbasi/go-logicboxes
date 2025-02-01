@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"net/http"
 	"os"
 	"testing"
 
@@ -8,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var d = New(core.New(
-	os.Getenv("RESELLER_ID"),
-	os.Getenv("API_KEY"),
-	false),
-)
+var d = New(core.New(core.Config{
+	ResellerId:   os.Getenv("RESELLER_ID"),
+	APIKey:       os.Getenv("API_KEY"),
+	IsProduction: false,
+}, http.DefaultClient))
 
 var (
 	domainName = os.Getenv("TEST_DOMAIN_NAME")

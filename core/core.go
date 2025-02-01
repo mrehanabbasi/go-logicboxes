@@ -17,13 +17,20 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type EntityStatus string
-type AuthType string
+type (
+	EntityStatus string
+	AuthType     string
+)
+
+type Config struct {
+	ResellerId   string
+	APIKey       string
+	IsProduction bool
+}
 
 type core struct {
-	resellerId   string
-	apiKey       string
-	isProduction bool
+	cfg    Config
+	client *http.Client
 }
 
 type JSONStatusResponse struct {
@@ -75,7 +82,7 @@ var (
 )
 
 func (c *core) IsProduction() bool {
-	return c.isProduction
+	return c.cfg.IsProduction
 }
 
 func (c Criteria) UrlValues() (url.Values, error) {
@@ -150,23 +157,22 @@ func PrintResponse(data []byte) error {
 }
 
 func (c *core) CallApi(method, namespace, apiName string, data url.Values) (*http.Response, error) {
-	urlPath := host[c.isProduction] + "/" + namespace + "/" + apiName + ".json"
-	data.Add("auth-userid", c.resellerId)
-	data.Add("api-key", c.apiKey)
+	urlPath := host[c.cfg.IsProduction] + "/" + namespace + "/" + apiName + ".json"
+	data.Add("auth-userid", c.cfg.ResellerId)
+	data.Add("api-key", c.cfg.APIKey)
 
 	switch method {
 	case http.MethodGet:
-		return http.Get(urlPath + "?" + data.Encode())
+		return c.client.Get(urlPath + "?" + data.Encode())
 	case http.MethodPost:
-		return http.PostForm(urlPath, data)
+		return c.client.PostForm(urlPath, data)
 	}
 	return nil, ErrRcApiUnsupportedMethod
 }
 
-func New(resellerId, apiKey string, isProduction bool) Core {
+func New(cfg Config, client *http.Client) Core {
 	return &core{
-		resellerId:   resellerId,
-		apiKey:       apiKey,
-		isProduction: isProduction,
+		cfg:    cfg,
+		client: client,
 	}
 }
