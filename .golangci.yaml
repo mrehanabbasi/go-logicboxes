@@ -1,0 +1,126 @@
+linters-settings:
+  govet:
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    disable-all: true
+    enable:
+      - asmdecl
+      - assign
+      - atomic
+      - bools
+      - buildtag
+      - cgocall
+      - composites
+      - copylocks
+      - errorsas
+      - httpresponse
+      - loopclosure
+      - lostcancel
+      - nilfunc
+      - nilness
+      - printf
+      - shadow
+      - shift
+      - stdmethods
+      - structtag
+      - tests
+      - unmarshal
+      - unreachable
+      - unsafeptr
+      - unusedresult
+  gocyclo:
+    min-complexity: 15
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  goimports:
+    local-prefixes: github.com/mrehanabbasi/go-resellerclub
+  gofumpt:
+    module-path: github.com/mrehanabbasi/go-resellerclub
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - hugeParam
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - octalLiteral
+      - whyNoLint
+      - paramTypeCombine
+  funlen:
+    lines: 100
+    statements: 50
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+          - $test
+        deny:
+          - pkg: 'github.com/sirupsen/logrus'
+            desc: logging only allowed by logutils.Log
+          - pkg: 'github.com/golang/mock'
+            desc: golang gomock is no longer maintained, use go.uber.org/mock/gomock instead
+  nolintlint:
+    allow-unused: false # report any unused nolint directives
+    require-explanation: false # don't require an explanation for nolint directives
+    require-specific: true # require nolint directives to be specific about which linter is being skipped
+  gosec:
+    excludes:
+      - G115 # Potential integer overflow when converting between integer types
+linters:
+  enable:
+    - bodyclose
+    - copyloopvar
+    - depguard
+    - dogsled
+    - errcheck
+    - funlen
+    - gocognit
+    - gocritic
+    - gocyclo
+    - godox
+    - gofumpt
+    - goimports
+    - revive
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - nolintlint
+    - prealloc
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - whitespace
+
+#run:
+#  modules-download-mode: vendor
+
+issues:
+  exclude:
+    - 'shadow: declaration of "err"'
+    - 'should have comment or be unexported'
+  #    - "ST1000: at least one file in a package should have a package comment"
+  #    - a blank import should be only in a main or test package
+  exclude-use-default: false
