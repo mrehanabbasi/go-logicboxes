@@ -14,10 +14,10 @@ type ActivatingDNSServiceResponse struct {
 type SearchingDNSRecords struct {
 	RecsOnPage string
 	Recsindb   string
-	Records    []*DNSRecord
+	Records    []*Record
 }
 
-type DNSRecord struct {
+type Record struct {
 	TimeToLive string `json:"timetolive,omitempty"`
 	Status     string `json:"status,omitempty"`
 	Type       string `json:"type,omitempty"`
@@ -27,6 +27,7 @@ type DNSRecord struct {
 
 type RecordType string
 
+// Const for DNS record type.
 const (
 	RecordA     RecordType = "A"
 	RecordMX    RecordType = "MX"

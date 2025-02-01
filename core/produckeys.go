@@ -2,6 +2,7 @@ package core
 
 type DomainKey string
 
+// Const for domain keys.
 const (
 	DotASIA               DomainKey = "dotasia"
 	DotAU3rd              DomainKey = "thirdleveldotau"

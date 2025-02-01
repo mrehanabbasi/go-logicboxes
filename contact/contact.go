@@ -1,3 +1,4 @@
+// Package contact contains APIs for contacts-related tasks.
 package contact
 
 import (
@@ -19,25 +20,25 @@ type contact struct {
 }
 
 type Contact interface {
-	Add(details *ContactDetail, attributes core.EntityAttributes) error
-	Details(contactId string) (*ContactDetail, error)
-	Delete(contactId string) (*Action, error)
-	Search(criteria ContactCriteria, offset, limit uint16) (*ContactSearchResult, error)
-	SetDefault(customerId, registrantContactID, adminContactID, techContactID, billingContactID string, types []ContactType) error
-	Default(customerId string, types []ContactType) (map[string]ContactDetail, error)
-	ValidateRegistrant(contactId string, eligibilities []Eligibility) (RegistrantValidation, error)
-	AddExtraDetails(contactId string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error
+	Add(details *Detail, attributes core.EntityAttributes) error
+	Details(contactID string) (*Detail, error)
+	Delete(contactID string) (*Action, error)
+	Search(criteria Criteria, offset, limit uint16) (*SearchResult, error)
+	SetDefault(customerID, registrantContactID, adminContactID, techContactID, billingContactID string, types []Type) error
+	Default(customerID string, types []Type) (map[string]Detail, error)
+	ValidateRegistrant(contactID string, eligibilities []Eligibility) (RegistrantValidation, error)
+	AddExtraDetails(contactID string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error
 	DotCAAgreement() (map[string]string, error)
 	// AddDotCOOPSponsor(customerId string, details ContactDetail) (string, error)
 	// DotCOOPSponsors(customerId string) error
 }
 
 func (c *contact) DotCAAgreement() (map[string]string, error) {
-	resp, err := c.core.CallApi(http.MethodGet, "contacts/dotca", "registrantagreement", url.Values{})
+	resp, err := c.core.CallAPI(http.MethodGet, "contacts/dotca", "registrantagreement", url.Values{})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -46,15 +47,14 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	ret := map[string]string{}
-	if err = json.Unmarshal(bytesResp, &ret); err != nil {
+	if err := json.Unmarshal(bytesResp, &ret); err != nil {
 		return nil, err
 	}
 
@@ -66,11 +66,11 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 // 		return core.ErrRcInvalidCredential
 // 	}
 
-// 	resp, err := c.core.CallApi(http.MethodGet, "contacts", "sponsors", url.Values{"customer-id": []string{customerId}})
+// 	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "sponsors", url.Values{"customer-id": []string{customerId}})
 // 	if err != nil {
 // 		return err
 // 	}
-// 	defer resp.Body.Close()
+// 	defer func() { _ = resp.Body.Close() }()
 
 // 	bytesResp, err := io.ReadAll(resp.Body)
 // 	if err != nil {
@@ -79,8 +79,7 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 
 // 	if resp.StatusCode != http.StatusOK {
 // 		errResponse := core.JSONStatusResponse{}
-// 		err = json.Unmarshal(bytesResp, &errResponse)
-// 		if err != nil {
+// 		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 // 			return err
 // 		}
 // 		return errors.New(strings.ToLower(errResponse.Message))
@@ -104,11 +103,11 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 // 	}
 // 	data.Add("customer-id", customerId)
 
-// 	resp, err := c.core.CallApi(http.MethodPost, "contacts/coop", "add-sponsor", *data)
+// 	resp, err := c.core.CallAPI(http.MethodPost, "contacts/coop", "add-sponsor", *data)
 // 	if err != nil {
 // 		return "", err
 // 	}
-// 	defer resp.Body.Close()
+// 	defer func() { _ = resp.Body.Close() }()
 
 // 	bytesResp, err := io.ReadAll(resp.Body)
 // 	if err != nil {
@@ -117,8 +116,7 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 
 // 	if resp.StatusCode != http.StatusOK {
 // 		errResponse := core.JSONStatusResponse{}
-// 		err = json.Unmarshal(bytesResp, &errResponse)
-// 		if err != nil {
+// 		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 // 			return "", err
 // 		}
 // 		return "", errors.New(strings.ToLower(errResponse.Message))
@@ -127,17 +125,17 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 // 	return string(bytesResp), nil
 // }
 
-func (c *contact) AddExtraDetails(contactId string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error {
-	if !core.RgxNumber.MatchString(contactId) {
+func (c *contact) AddExtraDetails(contactID string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error {
+	if !core.RgxNumber.MatchString(contactID) {
 		return core.ErrRcInvalidCredential
 	}
 
-	if attributes == nil || domainKeys == nil || len(domainKeys) <= 0 {
+	if attributes == nil || domainKeys == nil || len(domainKeys) == 0 {
 		return errors.New("attributes and domain keys cannot be nil or empty")
 	}
 
 	data := url.Values{}
-	data.Add("contact-id", contactId)
+	data.Add("contact-id", contactID)
 	attributes.CopyTo(&data)
 
 	wg := sync.WaitGroup{}
@@ -153,11 +151,11 @@ func (c *contact) AddExtraDetails(contactId string, attributes core.EntityAttrib
 	}
 	wg.Wait()
 
-	resp, err := c.core.CallApi(http.MethodPost, "contacts", "set-details", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "set-details", data)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -166,8 +164,7 @@ func (c *contact) AddExtraDetails(contactId string, attributes core.EntityAttrib
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return err
 		}
 		return errors.New(strings.ToLower(errResponse.Message))
@@ -184,17 +181,17 @@ func (c *contact) AddExtraDetails(contactId string, attributes core.EntityAttrib
 	return nil
 }
 
-func (c *contact) ValidateRegistrant(contactId string, eligibilities []Eligibility) (RegistrantValidation, error) {
-	if !core.RgxNumber.MatchString(contactId) {
+func (c *contact) ValidateRegistrant(contactID string, eligibilities []Eligibility) (RegistrantValidation, error) {
+	if !core.RgxNumber.MatchString(contactID) {
 		return nil, core.ErrRcInvalidCredential
 	}
 
-	if len(eligibilities) <= 0 {
+	if len(eligibilities) == 0 {
 		return nil, errors.New("eligibilities must not empty")
 	}
 
 	data := url.Values{}
-	data.Add("contact-id", contactId)
+	data.Add("contact-id", contactID)
 
 	wg := sync.WaitGroup{}
 	rwMutex := sync.RWMutex{}
@@ -209,11 +206,11 @@ func (c *contact) ValidateRegistrant(contactId string, eligibilities []Eligibili
 	}
 	wg.Wait()
 
-	resp, err := c.core.CallApi(http.MethodGet, "contacts", "validate-registrant", data)
+	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "validate-registrant", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -222,41 +219,40 @@ func (c *contact) ValidateRegistrant(contactId string, eligibilities []Eligibili
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	validation := RegistrantValidation{}
-	err = json.Unmarshal(bytesResp, &validation)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &validation); err != nil {
 		return nil, err
 	}
 
 	return validation, nil
 }
 
-func (c *contact) Default(customerId string, types []ContactType) (map[string]ContactDetail, error) {
-	if len(types) <= 0 {
+//nolint:funlen
+func (c *contact) Default(customerID string, types []Type) (map[string]Detail, error) {
+	if len(types) == 0 {
 		return nil, errors.New("contact types must not empty")
 	}
-	if !core.RgxNumber.MatchString(customerId) {
+	if !core.RgxNumber.MatchString(customerID) {
 		return nil, core.ErrRcInvalidCredential
 	}
 
 	data := url.Values{}
-	data.Add("customer-id", customerId)
+	data.Add("customer-id", customerID)
 	for _, t := range types {
 		data.Add("type", string(t))
 	}
 
-	resp, err := c.core.CallApi(http.MethodPost, "contacts", "default", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "default", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -265,8 +261,7 @@ func (c *contact) Default(customerId string, types []ContactType) (map[string]Co
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
@@ -277,25 +272,24 @@ func (c *contact) Default(customerId string, types []ContactType) (map[string]Co
 	bytesResp = []byte(strResp)
 
 	exoSkeleton := map[string]core.JSONBytes{}
-	err = json.Unmarshal(bytesResp, &exoSkeleton)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &exoSkeleton); err != nil {
 		return nil, err
 	}
-	if len(exoSkeleton) <= 0 {
+	if len(exoSkeleton) == 0 {
 		return nil, errors.New("failed while extract exoskeleton")
 	}
 
 	contacts := map[string]core.JSONBytes{}
 	for _, elem := range exoSkeleton {
 		bytesResp = []byte(elem)
-		if err = json.Unmarshal(bytesResp, &contacts); err != nil {
+		if err := json.Unmarshal(bytesResp, &contacts); err != nil {
 			return nil, err
 		}
 	}
 
 	wg := sync.WaitGroup{}
 	rwMutex := sync.RWMutex{}
-	defaultContacts := map[string]ContactDetail{}
+	defaultContacts := map[string]Detail{}
 
 	for k, v := range contacts {
 		wg.Add(1)
@@ -306,7 +300,7 @@ func (c *contact) Default(customerId string, types []ContactType) (map[string]Co
 			case "registrant", "type", "tech", "billing", "admin":
 				return
 			default:
-				ctc := ContactDetail{}
+				ctc := Detail{}
 				if err := json.Unmarshal(bytesValue, &ctc); err != nil {
 					return
 				}
@@ -321,16 +315,21 @@ func (c *contact) Default(customerId string, types []ContactType) (map[string]Co
 	return defaultContacts, nil
 }
 
-func (c *contact) SetDefault(customerId, regContactID, adminContactID, techContactID, billContactID string, types []ContactType) error {
-	if len(types) <= 0 {
+func (c *contact) SetDefault(
+	customerID, regContactID, adminContactID, techContactID, billContactID string,
+	types []Type,
+) error {
+	if len(types) == 0 {
 		return errors.New("contact types must not empty")
 	}
-	if !core.RgxNumber.MatchString(customerId) || !core.RgxNumber.MatchString(regContactID) || !core.RgxNumber.MatchString(adminContactID) || !core.RgxNumber.MatchString(techContactID) || !core.RgxNumber.MatchString(billContactID) {
+	if !core.RgxNumber.MatchString(customerID) || !core.RgxNumber.MatchString(regContactID) ||
+		!core.RgxNumber.MatchString(adminContactID) || !core.RgxNumber.MatchString(techContactID) ||
+		!core.RgxNumber.MatchString(billContactID) {
 		return core.ErrRcInvalidCredential
 	}
 
 	data := url.Values{}
-	data.Add("customer-id", customerId)
+	data.Add("customer-id", customerID)
 	data.Add("reg-contact-id", regContactID)
 	data.Add("admin-contact-id", adminContactID)
 	data.Add("tech-contact-id", techContactID)
@@ -340,11 +339,11 @@ func (c *contact) SetDefault(customerId, regContactID, adminContactID, techConta
 		data.Add("type", string(t))
 	}
 
-	resp, err := c.core.CallApi(http.MethodPost, "contacts", "modDefault", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "modDefault", data)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -353,8 +352,7 @@ func (c *contact) SetDefault(customerId, regContactID, adminContactID, techConta
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return err
 		}
 		return errors.New(strings.ToLower(errResponse.Message))
@@ -363,7 +361,7 @@ func (c *contact) SetDefault(customerId, regContactID, adminContactID, techConta
 	return nil
 }
 
-func (c *contact) Search(criteria ContactCriteria, offset, limit uint16) (*ContactSearchResult, error) {
+func (c *contact) Search(criteria Criteria, offset, limit uint16) (*SearchResult, error) {
 	if offset <= 0 || limit <= 0 {
 		return nil, errors.New("offset or limit must greater than zero")
 	}
@@ -372,18 +370,18 @@ func (c *contact) Search(criteria ContactCriteria, offset, limit uint16) (*Conta
 		return nil, err
 	}
 
-	data, err := criteria.UrlValues()
+	data, err := criteria.URLValues()
 	if err != nil {
 		return nil, err
 	}
 	data.Add("no-of-records", strconv.FormatUint(uint64(limit), 10))
 	data.Add("page-no", strconv.FormatUint(uint64(offset), 10))
 
-	resp, err := c.core.CallApi(http.MethodGet, "contacts", "search", data)
+	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "search", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -392,8 +390,7 @@ func (c *contact) Search(criteria ContactCriteria, offset, limit uint16) (*Conta
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
@@ -407,7 +404,7 @@ func (c *contact) Search(criteria ContactCriteria, offset, limit uint16) (*Conta
 		return nil, err
 	}
 
-	var dataBuffers []ContactDetail
+	var dataBuffers []Detail
 	var numMatched int
 
 	for key, dataBytes := range buffer {
@@ -424,7 +421,7 @@ func (c *contact) Search(criteria ContactCriteria, offset, limit uint16) (*Conta
 		}
 	}
 
-	return &ContactSearchResult{
+	return &SearchResult{
 		RequestedLimit:  limit,
 		RequestedOffset: offset,
 		Contacts:        dataBuffers,
@@ -432,16 +429,16 @@ func (c *contact) Search(criteria ContactCriteria, offset, limit uint16) (*Conta
 	}, nil
 }
 
-func (c *contact) Delete(contactId string) (*Action, error) {
-	if !core.RgxNumber.MatchString(contactId) {
+func (c *contact) Delete(contactID string) (*Action, error) {
+	if !core.RgxNumber.MatchString(contactID) {
 		return nil, core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallApi(http.MethodPost, "contacts", "delete", url.Values{"contact-id": {contactId}})
+	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "delete", url.Values{"contact-id": {contactID}})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -450,34 +447,33 @@ func (c *contact) Delete(contactId string) (*Action, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	ret := new(Action)
-	if err = json.Unmarshal(bytesResp, ret); err != nil {
+	if err := json.Unmarshal(bytesResp, ret); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
 }
 
-func (c *contact) Details(contactId string) (*ContactDetail, error) {
-	if !core.RgxNumber.MatchString(contactId) {
+func (c *contact) Details(contactID string) (*Detail, error) {
+	if !core.RgxNumber.MatchString(contactID) {
 		return nil, core.ErrRcInvalidCredential
 	}
 
 	data := url.Values{}
-	data.Add("contact-id", contactId)
+	data.Add("contact-id", contactID)
 
-	resp, err := c.core.CallApi(http.MethodGet, "contacts", "details", data)
+	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "details", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -486,27 +482,26 @@ func (c *contact) Details(contactId string) (*ContactDetail, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
-	ret := new(ContactDetail)
-	if err = json.Unmarshal(bytesResp, ret); err != nil {
+	ret := new(Detail)
+	if err := json.Unmarshal(bytesResp, ret); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
 }
 
-func (c *contact) Add(details *ContactDetail, attributes core.EntityAttributes) error {
+func (c *contact) Add(details *Detail, attributes core.EntityAttributes) error {
 	if details == nil {
 		return errors.New("detail must not nil")
 	}
 
-	data, err := details.UrlValues()
+	data, err := details.URLValues()
 	if err != nil {
 		return err
 	}
@@ -515,11 +510,11 @@ func (c *contact) Add(details *ContactDetail, attributes core.EntityAttributes) 
 		attributes.CopyTo(data)
 	}
 
-	resp, err := c.core.CallApi(http.MethodPost, "contacts", "add", *data)
+	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "add", *data)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -528,14 +523,13 @@ func (c *contact) Add(details *ContactDetail, attributes core.EntityAttributes) 
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return err
 		}
 		return errors.New(strings.ToLower(errResponse.Message))
 	}
 
-	details.Id = string(bytesResp)
+	details.ID = string(bytesResp)
 	return nil
 }
 

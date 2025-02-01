@@ -1,3 +1,4 @@
+// Package customer contains APIs for customer interaction i.e. login, sign up, authentication etc.
 package customer
 
 import (
@@ -19,22 +20,22 @@ type customer struct {
 
 type Customer interface {
 	SignUp(regForm *SignUpForm) error
-	ChangePassword(customerId, newPassword string) error
-	Details(customerIdOrEmail string) (*CustomerDetail, error)
-	Delete(customerId string) error
+	ChangePassword(customerID, newPassword string) error
+	Details(customerIDOrEmail string) (*Detail, error)
+	Delete(customerID string) error
 	ForgotPassword(username string) error
-	Suspension(toggle bool, customerId, reason string) error
-	Search(criteria CustomerCriteria, offset, limit uint16) (*CustomerSearchResult, error)
-	Modify(customerIdOrEmail string, modification CustomerDetail) error
-	GenerateOTP(customerId string) error
-	VerifyOTP(customerId, otp string, authType core.AuthType) (bool, error)
+	Suspension(toggle bool, customerID, reason string) error
+	Search(criteria Criteria, offset, limit uint16) (*SearchResult, error)
+	Modify(customerIDOrEmail string, modification Detail) error
+	GenerateOTP(customerID string) error
+	VerifyOTP(customerID, otp string, authType core.AuthType) (bool, error)
 	GenerateToken(username, password, ip string) (string, error)
-	GenerateLoginToken(customerId, ip, dashboardBaseURL string) (LoginToken, error)
-	Authenticate(username, password string) (*CustomerDetail, *ErrorAuthentication)
-	AuthenticateToken(token string, withHistory bool) (*CustomerDetail, error)
+	GenerateLoginToken(customerID, ip, dashboardBaseURL string) (LoginToken, error)
+	Authenticate(username, password string) (*Detail, *ErrorAuthentication)
+	AuthenticateToken(token string, withHistory bool) (*Detail, error)
 }
 
-func (c *customer) AuthenticateToken(token string, withHistory bool) (*CustomerDetail, error) {
+func (c *customer) AuthenticateToken(token string, withHistory bool) (*Detail, error) {
 	data := url.Values{}
 	data.Add("token", token)
 
@@ -43,11 +44,11 @@ func (c *customer) AuthenticateToken(token string, withHistory bool) (*CustomerD
 		funcName = "authenticate-token-without-history"
 	}
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers", funcName, data)
+	resp, err := c.core.CallAPI(http.MethodGet, "customers", funcName, data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -56,43 +57,43 @@ func (c *customer) AuthenticateToken(token string, withHistory bool) (*CustomerD
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		if err = json.Unmarshal(bytesResp, &errResponse); err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
-	ret := new(CustomerDetail)
-	if err = json.Unmarshal(bytesResp, ret); err != nil {
+	ret := new(Detail)
+	if err := json.Unmarshal(bytesResp, ret); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
 }
 
-func (c *customer) GenerateLoginToken(customerId, ip, dashboardBaseURL string) (LoginToken, error) {
-	if !core.RgxNumber.MatchString(customerId) {
+func (c *customer) GenerateLoginToken(customerID, ip, dashboardBaseURL string) (LoginToken, error) {
+	if !core.RgxNumber.MatchString(customerID) {
 		return nil, errors.New("invalid format on customerid")
 	}
 
-	baseUrl := "http://demo.myorderbox.com"
+	baseURL := "http://demo.myorderbox.com"
 	if c.core.IsProduction() {
-		rgxUrl := regexp.MustCompile(`^https?\:\/\/.*$`)
-		if !rgxUrl.MatchString(dashboardBaseURL) {
+		rgxURL := regexp.MustCompile(`^https?://.*$`)
+		if !rgxURL.MatchString(dashboardBaseURL) {
 			return nil, errors.New("dashboard's baseurl is required in production mode")
 		}
-		baseUrl = dashboardBaseURL
+		baseURL = dashboardBaseURL
 	}
 
 	data := url.Values{}
-	data.Add("customer-id", customerId)
+	data.Add("customer-id", customerID)
 	data.Add("ip", ip)
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers", "generate-login-token", data)
+	resp, err := c.core.CallAPI(http.MethodGet, "customers", "generate-login-token", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -101,14 +102,14 @@ func (c *customer) GenerateLoginToken(customerId, ip, dashboardBaseURL string) (
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		if err = json.Unmarshal(bytesResp, &errResponse); err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	token := &loginToken{
-		baseUrl: baseUrl,
+		baseURL: baseURL,
 		token:   string(bytesResp),
 	}
 
@@ -129,11 +130,11 @@ func (c *customer) GenerateToken(username, password, ip string) (string, error) 
 	data.Add("passwd", password)
 	data.Add("ip", ip)
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers", "generate-token", data)
+	resp, err := c.core.CallAPI(http.MethodGet, "customers", "generate-token", data)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -142,7 +143,7 @@ func (c *customer) GenerateToken(username, password, ip string) (string, error) 
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		if err = json.Unmarshal(bytesResp, &errResponse); err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return "", err
 		}
 		return "", errors.New(strings.ToLower(errResponse.Message))
@@ -151,7 +152,7 @@ func (c *customer) GenerateToken(username, password, ip string) (string, error) 
 	return string(bytesResp), nil
 }
 
-func (c *customer) Authenticate(username, password string) (*CustomerDetail, *ErrorAuthentication) {
+func (c *customer) Authenticate(username, password string) (*Detail, *ErrorAuthentication) {
 	errAuth := &ErrorAuthentication{
 		JSONStatusResponse: core.JSONStatusResponse{
 			Status:  "ERROR",
@@ -168,12 +169,12 @@ func (c *customer) Authenticate(username, password string) (*CustomerDetail, *Er
 	data.Add("username", username)
 	data.Add("passwd", password)
 
-	resp, err := c.core.CallApi(http.MethodPost, "customers/v2", "authenticate", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "customers/v2", "authenticate", data)
 	if err != nil {
 		errAuth.Message = err.Error()
 		return nil, errAuth
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -182,7 +183,7 @@ func (c *customer) Authenticate(username, password string) (*CustomerDetail, *Er
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(bytesResp, errAuth)
+		err := json.Unmarshal(bytesResp, errAuth)
 		if err != nil {
 			errAuth.Message = err.Error()
 			return nil, errAuth
@@ -190,8 +191,8 @@ func (c *customer) Authenticate(username, password string) (*CustomerDetail, *Er
 		return nil, errAuth
 	}
 
-	ret := new(CustomerDetail)
-	if err = json.Unmarshal(bytesResp, ret); err != nil {
+	ret := new(Detail)
+	if err := json.Unmarshal(bytesResp, ret); err != nil {
 		errAuth.Message = err.Error()
 		return nil, errAuth
 	}
@@ -199,21 +200,21 @@ func (c *customer) Authenticate(username, password string) (*CustomerDetail, *Er
 	return ret, nil
 }
 
-func (c *customer) VerifyOTP(customerId, otp string, authType core.AuthType) (bool, error) {
-	if !core.RgxNumber.MatchString(customerId) {
+func (c *customer) VerifyOTP(customerID, otp string, authType core.AuthType) (bool, error) {
+	if !core.RgxNumber.MatchString(customerID) {
 		return false, core.ErrRcInvalidCredential
 	}
 
 	data := url.Values{}
-	data.Add("customerid", customerId)
+	data.Add("customerid", customerID)
 	data.Add("otp", otp)
 	data.Add("type", string(authType))
 
-	resp, err := c.core.CallApi(http.MethodPost, "customers/authenticate", "verify-otp", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "customers/authenticate", "verify-otp", data)
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -222,7 +223,7 @@ func (c *customer) VerifyOTP(customerId, otp string, authType core.AuthType) (bo
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return false, err
 		}
@@ -232,16 +233,16 @@ func (c *customer) VerifyOTP(customerId, otp string, authType core.AuthType) (bo
 	return strconv.ParseBool(string(bytesResp))
 }
 
-func (c *customer) GenerateOTP(customerId string) error {
-	if !core.RgxNumber.MatchString(customerId) {
+func (c *customer) GenerateOTP(customerID string) error {
+	if !core.RgxNumber.MatchString(customerID) {
 		return core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers/authenticate", "generate-otp", url.Values{"customerid": {customerId}})
+	resp, err := c.core.CallAPI(http.MethodGet, "customers/authenticate", "generate-otp", url.Values{"customerid": {customerID}})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -250,7 +251,7 @@ func (c *customer) GenerateOTP(customerId string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
@@ -268,8 +269,8 @@ func (c *customer) GenerateOTP(customerId string) error {
 	return nil
 }
 
-func (c *customer) Modify(customerIdOrEmail string, modification CustomerDetail) error {
-	customerBefore, err := c.Details(customerIdOrEmail)
+func (c *customer) Modify(customerIDOrEmail string, modification Detail) error {
+	customerBefore, err := c.Details(customerIDOrEmail)
 	if err != nil {
 		return nil
 	}
@@ -278,17 +279,17 @@ func (c *customer) Modify(customerIdOrEmail string, modification CustomerDetail)
 		return nil
 	}
 
-	data, err := modification.UrlValues()
+	data, err := modification.URLValues()
 	if err != nil {
 		return nil
 	}
-	data.Add("customer-id", customerBefore.Id)
+	data.Add("customer-id", customerBefore.ID)
 
-	resp, err := c.core.CallApi(http.MethodPost, "customers", "modify", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "customers", "modify", data)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -297,7 +298,7 @@ func (c *customer) Modify(customerIdOrEmail string, modification CustomerDetail)
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
@@ -315,7 +316,7 @@ func (c *customer) Modify(customerIdOrEmail string, modification CustomerDetail)
 	return nil
 }
 
-func (c *customer) Search(criteria CustomerCriteria, offset, limit uint16) (*CustomerSearchResult, error) {
+func (c *customer) Search(criteria Criteria, offset, limit uint16) (*SearchResult, error) {
 	if limit < 10 || limit > 500 {
 		return nil, errors.New("limit must be in range of 10 to 500")
 	}
@@ -323,18 +324,18 @@ func (c *customer) Search(criteria CustomerCriteria, offset, limit uint16) (*Cus
 		return nil, errors.New("offset must greater than 0")
 	}
 
-	data, err := criteria.UrlValues()
+	data, err := criteria.URLValues()
 	if err != nil {
 		return nil, err
 	}
 	data.Add("no-of-records", strconv.FormatUint(uint64(limit), 10))
 	data.Add("page-no", strconv.FormatUint(uint64(offset), 10))
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers", "search", data)
+	resp, err := c.core.CallAPI(http.MethodGet, "customers", "search", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -343,7 +344,7 @@ func (c *customer) Search(criteria CustomerCriteria, offset, limit uint16) (*Cus
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -358,8 +359,8 @@ func (c *customer) Search(criteria CustomerCriteria, offset, limit uint16) (*Cus
 		return nil, err
 	}
 
-	var dataBuffer CustomerDetail
-	var dataBuffers []CustomerDetail
+	var dataBuffer Detail
+	var dataBuffers []Detail
 	var numMatched int
 	for key, dataBytes := range buffer {
 		switch {
@@ -376,7 +377,7 @@ func (c *customer) Search(criteria CustomerCriteria, offset, limit uint16) (*Cus
 		}
 	}
 
-	return &CustomerSearchResult{
+	return &SearchResult{
 		RequestedLimit:  limit,
 		RequestedOffset: offset,
 		Customers:       dataBuffers,
@@ -384,8 +385,8 @@ func (c *customer) Search(criteria CustomerCriteria, offset, limit uint16) (*Cus
 	}, nil
 }
 
-func (c *customer) Suspension(toggle bool, customerId, reason string) error {
-	if !core.RgxNumber.MatchString(customerId) {
+func (c *customer) Suspension(toggle bool, customerID, reason string) error {
+	if !core.RgxNumber.MatchString(customerID) {
 		return core.ErrRcInvalidCredential
 	}
 
@@ -395,14 +396,14 @@ func (c *customer) Suspension(toggle bool, customerId, reason string) error {
 	}
 
 	data := url.Values{}
-	data.Add("customer-id", customerId)
+	data.Add("customer-id", customerID)
 	data.Add("reason", reason)
 
-	resp, err := c.core.CallApi(http.MethodPost, "customers", funcName, data)
+	resp, err := c.core.CallAPI(http.MethodPost, "customers", funcName, data)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -411,7 +412,7 @@ func (c *customer) Suspension(toggle bool, customerId, reason string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
@@ -434,11 +435,11 @@ func (c *customer) ForgotPassword(username string) error {
 		return core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers", "forgot-password", url.Values{"username": {username}})
+	resp, err := c.core.CallAPI(http.MethodGet, "customers", "forgot-password", url.Values{"username": {username}})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -447,7 +448,7 @@ func (c *customer) ForgotPassword(username string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
@@ -465,16 +466,16 @@ func (c *customer) ForgotPassword(username string) error {
 	return nil
 }
 
-func (c *customer) Delete(customerId string) error {
-	if !core.RgxNumber.MatchString(customerId) {
+func (c *customer) Delete(customerID string) error {
+	if !core.RgxNumber.MatchString(customerID) {
 		return core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallApi(http.MethodPost, "customers", "delete", url.Values{"customer-id": {customerId}})
+	resp, err := c.core.CallAPI(http.MethodPost, "customers", "delete", url.Values{"customer-id": {customerID}})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -483,7 +484,7 @@ func (c *customer) Delete(customerId string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
@@ -501,27 +502,27 @@ func (c *customer) Delete(customerId string) error {
 	return nil
 }
 
-func (c *customer) Details(customerIdOrEmail string) (*CustomerDetail, error) {
+func (c *customer) Details(customerIDOrEmail string) (*Detail, error) {
 	data := url.Values{}
 
 	var funcName, query string
 	switch {
-	case core.RgxEmail.MatchString(customerIdOrEmail):
+	case core.RgxEmail.MatchString(customerIDOrEmail):
 		funcName = "details"
 		query = "username"
-	case core.RgxNumber.MatchString(customerIdOrEmail):
+	case core.RgxNumber.MatchString(customerIDOrEmail):
 		funcName = "details-by-id"
 		query = "customer-id"
 	default:
 		return nil, core.ErrRcInvalidCredential
 	}
-	data.Add(query, customerIdOrEmail)
+	data.Add(query, customerIDOrEmail)
 
-	resp, err := c.core.CallApi(http.MethodGet, "customers", funcName, data)
+	resp, err := c.core.CallAPI(http.MethodGet, "customers", funcName, data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -530,35 +531,35 @@ func (c *customer) Details(customerIdOrEmail string) (*CustomerDetail, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
-	ret := new(CustomerDetail)
-	if err = json.Unmarshal(bytesResp, ret); err != nil {
+	ret := new(Detail)
+	if err := json.Unmarshal(bytesResp, ret); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
 }
 
-func (c *customer) ChangePassword(customerId, newPassword string) error {
+func (c *customer) ChangePassword(customerID, newPassword string) error {
 	if !matchPasswordWithPattern(newPassword, true) {
 		return errors.New("invalid password format")
 	}
 
 	data := url.Values{}
-	data.Add("customer-id", customerId)
+	data.Add("customer-id", customerID)
 	data.Add("new-passwd", newPassword)
 
-	resp, err := c.core.CallApi(http.MethodPost, "customers/v2", "change-password", data)
+	resp, err := c.core.CallAPI(http.MethodPost, "customers/v2", "change-password", data)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -567,7 +568,7 @@ func (c *customer) ChangePassword(customerId, newPassword string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
@@ -586,15 +587,15 @@ func (c *customer) ChangePassword(customerId, newPassword string) error {
 }
 
 func (c *customer) SignUp(regForm *SignUpForm) error {
-	urlValues, err := regForm.UrlValues()
+	urlValues, err := regForm.URLValues()
 	if err != nil {
 		return err
 	}
-	resp, err := c.core.CallApi(http.MethodPost, "customers/v2", "signup", urlValues)
+	resp, err := c.core.CallAPI(http.MethodPost, "customers/v2", "signup", urlValues)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -603,14 +604,14 @@ func (c *customer) SignUp(regForm *SignUpForm) error {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return err
 		}
 		return errors.New(strings.ToLower(errResponse.Message))
 	}
 
-	regForm.CustomerId = string(bytesResp)
+	regForm.CustomerID = string(bytesResp)
 	return nil
 }
 

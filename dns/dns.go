@@ -1,3 +1,4 @@
+// Package dns contains APIs for dns.
 package dns
 
 import (
@@ -53,11 +54,11 @@ func (d *dns) ActivatingDNSService(orderID string) (*ActivatingDNSServiceRespons
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "activate", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "activate", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -66,16 +67,14 @@ func (d *dns) ActivatingDNSService(orderID string) (*ActivatingDNSServiceRespons
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result ActivatingDNSServiceResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -89,11 +88,11 @@ func (d *dns) AddingIPv4AddressRecord(domainName, value, host string, ttl int) (
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/add-ipv4-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-ipv4-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -102,16 +101,14 @@ func (d *dns) AddingIPv4AddressRecord(domainName, value, host string, ttl int) (
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -125,11 +122,11 @@ func (d *dns) AddingIPv6AddressRecord(domainName, value, host string, ttl int) (
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/add-ipv6-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-ipv6-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -138,16 +135,14 @@ func (d *dns) AddingIPv6AddressRecord(domainName, value, host string, ttl int) (
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -161,11 +156,11 @@ func (d *dns) AddingCNAMERecord(domainName, value, host string, ttl int) (*StdRe
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/add-cname-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-cname-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -174,16 +169,14 @@ func (d *dns) AddingCNAMERecord(domainName, value, host string, ttl int) (*StdRe
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -198,11 +191,11 @@ func (d *dns) AddingMXRecord(domainName, value, host string, ttl, priority int) 
 	data.Add("ttl", strconv.Itoa(ttl))
 	data.Add("priority", strconv.Itoa(priority))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/add-mx-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-mx-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -211,16 +204,14 @@ func (d *dns) AddingMXRecord(domainName, value, host string, ttl, priority int) 
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -234,11 +225,11 @@ func (d *dns) AddingNSRecord(domainName, value, host string, ttl int) (*StdRespo
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/add-ns-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -247,8 +238,7 @@ func (d *dns) AddingNSRecord(domainName, value, host string, ttl int) (*StdRespo
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
@@ -270,11 +260,11 @@ func (d *dns) AddingTXTRecord(domainName, value, host string, ttl int) (*StdResp
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/manage/add-ns-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/manage/add-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -283,16 +273,14 @@ func (d *dns) AddingTXTRecord(domainName, value, host string, ttl int) (*StdResp
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -309,11 +297,11 @@ func (d *dns) AddingSRVRecord(domainName, value, host string, ttl, priority, por
 	data.Add("port", strconv.Itoa(port))
 	data.Add("weight", strconv.Itoa(weight))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/add-srv-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-srv-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -322,16 +310,14 @@ func (d *dns) AddingSRVRecord(domainName, value, host string, ttl, priority, por
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -346,11 +332,11 @@ func (d *dns) ModifyingIPv4AddressRecord(domainName, host, currentValue, newValu
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-ipv4-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-ipv4-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -359,16 +345,14 @@ func (d *dns) ModifyingIPv4AddressRecord(domainName, host, currentValue, newValu
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -383,11 +367,11 @@ func (d *dns) ModifyingIPv6AddressRecord(domainName, host, currentValue, newValu
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-ipv6-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-ipv6-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -396,16 +380,14 @@ func (d *dns) ModifyingIPv6AddressRecord(domainName, host, currentValue, newValu
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -420,11 +402,11 @@ func (d *dns) ModifyingCNAMERecord(domainName, host, currentValue, newValue stri
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-cname-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-cname-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -433,16 +415,14 @@ func (d *dns) ModifyingCNAMERecord(domainName, host, currentValue, newValue stri
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -458,11 +438,11 @@ func (d *dns) ModifyingMXRecord(domainName, host, currentValue, newValue string,
 	data.Add("ttl", strconv.Itoa(ttl))
 	data.Add("priority", strconv.Itoa(priority))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-mx-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-mx-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -471,16 +451,14 @@ func (d *dns) ModifyingMXRecord(domainName, host, currentValue, newValue string,
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -495,11 +473,11 @@ func (d *dns) ModifyingNSRecord(domainName, host, currentValue, newValue string,
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-ns-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -508,16 +486,14 @@ func (d *dns) ModifyingNSRecord(domainName, host, currentValue, newValue string,
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -532,11 +508,11 @@ func (d *dns) ModifyingTXTRecord(domainName, host, currentValue, newValue string
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-txt-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-txt-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -545,16 +521,14 @@ func (d *dns) ModifyingTXTRecord(domainName, host, currentValue, newValue string
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -572,11 +546,11 @@ func (d *dns) ModifyingSRVRecord(domainName, host, currentValue, newValue string
 	data.Add("port", strconv.Itoa(port))
 	data.Add("weight", strconv.Itoa(weight))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-srv-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-srv-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -585,16 +559,14 @@ func (d *dns) ModifyingSRVRecord(domainName, host, currentValue, newValue string
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -610,11 +582,11 @@ func (d *dns) ModifyingSOARecord(domainName, responsiblePerson string, refresh, 
 	data.Add("expire", strconv.Itoa(expire))
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/update-soa-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-soa-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -623,23 +595,26 @@ func (d *dns) ModifyingSOARecord(domainName, responsiblePerson string, refresh, 
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
 	return &result, nil
 }
 
-func (d *dns) SearchingDNSRecords(domainName string, typeRecord RecordType, noOfRecords, pageNo int, host, value string) (*SearchingDNSRecords, error) {
+func (d *dns) SearchingDNSRecords(
+	domainName string,
+	typeRecord RecordType,
+	noOfRecords, pageNo int,
+	host, value string,
+) (*SearchingDNSRecords, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("type", string(typeRecord))
@@ -648,11 +623,11 @@ func (d *dns) SearchingDNSRecords(domainName string, typeRecord RecordType, noOf
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodGet, "dns", "manage/search-records", data)
+	resp, err := d.core.CallAPI(http.MethodGet, "dns", "manage/search-records", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -661,8 +636,7 @@ func (d *dns) SearchingDNSRecords(domainName string, typeRecord RecordType, noOf
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
@@ -670,8 +644,7 @@ func (d *dns) SearchingDNSRecords(domainName string, typeRecord RecordType, noOf
 
 	var records SearchingDNSRecords
 	var result map[string]interface{}
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -695,9 +668,8 @@ func (d *dns) SearchingDNSRecords(domainName string, typeRecord RecordType, noOf
 			return nil, err
 		}
 
-		var record DNSRecord
-		err = json.Unmarshal(b, &record)
-		if err != nil {
+		var record Record
+		if err := json.Unmarshal(b, &record); err != nil {
 			return nil, err
 		}
 
@@ -712,11 +684,11 @@ func (d *dns) DeletingDNSRecord(host, value string) (*StdResponse, error) {
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodGet, "dns", "manage/delete-record", data)
+	resp, err := d.core.CallAPI(http.MethodGet, "dns", "manage/delete-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -725,16 +697,14 @@ func (d *dns) DeletingDNSRecord(host, value string) (*StdResponse, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -747,11 +717,11 @@ func (d *dns) DeletingIPv4AddressRecord(domainName, host, value string) (*StdRes
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-ipv4-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-ipv4-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -760,16 +730,14 @@ func (d *dns) DeletingIPv4AddressRecord(domainName, host, value string) (*StdRes
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -782,11 +750,11 @@ func (d *dns) DeletingIPv6AddressRecord(domainName, host, value string) (*StdRes
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-ipv6-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-ipv6-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -795,16 +763,14 @@ func (d *dns) DeletingIPv6AddressRecord(domainName, host, value string) (*StdRes
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -817,11 +783,11 @@ func (d *dns) DeletingCNAMERecord(domainName, host, value string) (*StdResponse,
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-cname-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-cname-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -830,16 +796,14 @@ func (d *dns) DeletingCNAMERecord(domainName, host, value string) (*StdResponse,
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -852,11 +816,11 @@ func (d *dns) DeletingMXRecord(domainName, host, value string) (*StdResponse, er
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-mx-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-mx-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -865,16 +829,14 @@ func (d *dns) DeletingMXRecord(domainName, host, value string) (*StdResponse, er
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -887,11 +849,11 @@ func (d *dns) DeletingNSRecord(domainName, host, value string) (*StdResponse, er
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-ns-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -900,16 +862,14 @@ func (d *dns) DeletingNSRecord(domainName, host, value string) (*StdResponse, er
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -922,11 +882,11 @@ func (d *dns) DeletingTXTRecord(domainName, host, value string) (*StdResponse, e
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-txt-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-txt-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -935,16 +895,14 @@ func (d *dns) DeletingTXTRecord(domainName, host, value string) (*StdResponse, e
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -959,11 +917,11 @@ func (d *dns) DeletingSRVRecord(domainName, host, value string, port, weight int
 	data.Add("port", strconv.Itoa(port))
 	data.Add("weight", strconv.Itoa(weight))
 
-	resp, err := d.core.CallApi(http.MethodPost, "dns", "manage/delete-srv-record", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-srv-record", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -972,16 +930,14 @@ func (d *dns) DeletingSRVRecord(domainName, host, value string, port, weight int
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 

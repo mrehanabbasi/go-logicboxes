@@ -24,6 +24,7 @@ type Currency struct {
 	Name string
 }
 
+// Const for currency ISO values.
 const (
 	IsoTWD CurrencyISO = "TWD"
 	IsoKES CurrencyISO = "KES"
@@ -183,11 +184,11 @@ const (
 )
 
 func fetchCurrencyDB(c core.Core) (currencyDB, error) {
-	resp, err := c.CallApi(http.MethodGet, "currency", "details", url.Values{})
+	resp, err := c.CallAPI(http.MethodGet, "currency", "details", url.Values{})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -196,7 +197,7 @@ func fetchCurrencyDB(c core.Core) (currencyDB, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +205,7 @@ func fetchCurrencyDB(c core.Core) (currencyDB, error) {
 	}
 
 	ret := make(map[string]map[string]string)
-	if err = json.Unmarshal(bytesResp, &ret); err != nil {
+	if err := json.Unmarshal(bytesResp, &ret); err != nil {
 		return nil, err
 	}
 

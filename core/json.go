@@ -6,13 +6,15 @@ import (
 	"time"
 )
 
-type JSONBool bool
-type JSONFloat float64
-type JSONTime time.Time
-type JSONTimestamp time.Time
-type JSONUint16 uint16
-type JSONInt int
-type JSONBytes []byte
+type (
+	JSONBool      bool
+	JSONFloat     float64
+	JSONTime      time.Time
+	JSONTimestamp time.Time
+	JSONUint16    uint16
+	JSONInt       int
+	JSONBytes     []byte
+)
 
 func (j *JSONBool) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")

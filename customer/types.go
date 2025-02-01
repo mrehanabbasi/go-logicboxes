@@ -14,13 +14,13 @@ import (
 
 type loginToken struct {
 	token   string
-	baseUrl string
+	baseURL string
 }
 
 type LoginToken interface {
 	String() string
-	UrlFullPath() string
-	LoginUrl() string
+	URLFullPath() string
+	LoginURL() string
 }
 
 type SignUpForm struct {
@@ -49,14 +49,14 @@ type SignUpForm struct {
 	SmsConcent            bool   `validate:"omitempty" query:"sms-consent,omitempty"`
 	EmailMarketingConcent bool   `validate:"omitempty" query:"email-marketing-consent,omitempty"`
 	AcceptPolicy          bool   `validate:"omitempty" query:"accept-policy,omitempty"`
-	CustomerId            string `validate:"-"`
+	CustomerID            string `validate:"-"`
 }
 
-type CustomerDetail struct {
-	Id                      string          `json:"customerid,omitempty" validate:"-" query:"-"`
+type Detail struct {
+	ID                      string          `json:"customerid,omitempty" validate:"-" query:"-"`
 	Username                string          `json:"username,omitempty" validate:"omitempty,email" query:"username"`
-	ResellerId              string          `json:"resellerid,omitempty" validate:"-" query:"-"`
-	ParentId                string          `json:"parentid,omitempty" validate:"-" query:"-"`
+	ResellerID              string          `json:"resellerid,omitempty" validate:"-" query:"-"`
+	ParentID                string          `json:"parentid,omitempty" validate:"-" query:"-"`
 	Name                    string          `json:"name,omitempty" validate:"omitempty" query:"name"`
 	Company                 string          `json:"company,omitempty" validate:"omitempty" query:"company"`
 	Email                   string          `json:"useremail,omitempty" validate:"-" query:"-"`
@@ -72,7 +72,7 @@ type CustomerDetail struct {
 	AddressLine2            string          `json:"address2,omitempty" validate:"omitempty" query:"address-line-2,omitempty"`
 	AddressLine3            string          `json:"address3,omitempty" validate:"omitempty" query:"address-line-3,omitempty"`
 	City                    string          `json:"city,omitempty" validate:"omitempty" query:"city"`
-	StateId                 string          `json:"stateid,omitempty" validate:"-" query:"-"`
+	StateID                 string          `json:"stateid,omitempty" validate:"-" query:"-"`
 	State                   string          `json:"state,omitempty" validate:"omitempty" query:"state"`
 	OtherState              string          `json:"-" validate:"omitempty" query:"other-state,omitempty"`
 	CountryCode             string          `json:"country,omitempty" validate:"omitempty,iso3166_1_alpha2" query:"country"`
@@ -87,7 +87,7 @@ type CustomerDetail struct {
 	Pin                     string          `json:"pin,omitempty" validate:"-" query:"-"`
 	TimeCreation            core.JSONTime   `json:"creationdt,omitempty" validate:"-" query:"-"`
 	Status                  string          `json:"customerstatus,omitempty" validate:"-" query:"-"`
-	SalesContactId          string          `json:"salescontactid,omitempty" validate:"-" query:"-"`
+	SalesContactID          string          `json:"salescontactid,omitempty" validate:"-" query:"-"`
 	WebsiteCount            core.JSONUint16 `json:"websitecount,omitempty" validate:"-" query:"-"`
 	TotalReceipts           core.JSONFloat  `json:"totalreceipts,omitempty" validate:"-" query:"-"`
 	Is2FA                   core.JSONBool   `json:"twofactorauth_enabled,omitempty" validate:"-" query:"-"`
@@ -96,7 +96,7 @@ type CustomerDetail struct {
 	IsDominicanTaxConfgired core.JSONBool   `json:"isDominicanTaxConfiguredByParent,omitempty" validate:"-" query:"-"`
 }
 
-type CustomerCriteria struct {
+type Criteria struct {
 	core.Criteria
 	Username       string            `validate:"omitempty" query:"username,omitempty"`
 	Status         core.EntityStatus `validate:"omitempty" query:"status,omitempty"`
@@ -108,11 +108,11 @@ type CustomerCriteria struct {
 	ReceiptHighest float64           `validate:"omitempty" query:"total-receipt-end,omitempty"`
 }
 
-type CustomerSearchResult struct {
+type SearchResult struct {
 	RequestedLimit  uint16
 	RequestedOffset uint16
 	TotalMatched    int
-	Customers       []CustomerDetail
+	Customers       []Detail
 }
 
 type ErrorAuthentication struct {
@@ -125,18 +125,18 @@ func (t loginToken) String() string {
 	return t.token
 }
 
-func (t loginToken) UrlFullPath() string {
+func (t loginToken) URLFullPath() string {
 	data := url.Values{}
 	data.Add("role", "customer")
 	data.Add("userLoginId", t.String())
 	return "servlet/AutoLoginServlet?" + data.Encode()
 }
 
-func (t loginToken) LoginUrl() string {
-	return strings.TrimRight(t.baseUrl, "/") + t.UrlFullPath()
+func (t loginToken) LoginURL() string {
+	return strings.TrimRight(t.baseURL, "/") + t.URLFullPath()
 }
 
-func (c *CustomerDetail) mergePrevious(prev *CustomerDetail) error {
+func (c *Detail) mergePrevious(prev *Detail) error {
 	if err := validator.New().Struct(c); err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (c *CustomerDetail) mergePrevious(prev *CustomerDetail) error {
 
 			tagFieldCurrent := typeCurrent.Elem().Field(idx).Tag.Get("query")
 
-			if len(tagFieldCurrent) <= 0 || tagFieldCurrent == "-" {
+			if tagFieldCurrent == "" || tagFieldCurrent == "-" {
 				return
 			}
 
@@ -178,7 +178,7 @@ func (c *CustomerDetail) mergePrevious(prev *CustomerDetail) error {
 	return nil
 }
 
-func (c CustomerDetail) UrlValues() (url.Values, error) {
+func (c Detail) URLValues() (url.Values, error) {
 	if err := validator.New().Struct(c); err != nil {
 		return url.Values{}, err
 	}
@@ -197,7 +197,7 @@ func (c CustomerDetail) UrlValues() (url.Values, error) {
 			vField := valueDetail.Field(idx)
 			fieldTag := typeDetail.Field(idx).Tag.Get("query")
 
-			if len(fieldTag) > 0 && fieldTag != "-" && vField.Kind() == reflect.String {
+			if fieldTag != "" && fieldTag != "-" && vField.Kind() == reflect.String {
 				if strings.HasSuffix(fieldTag, "omitempty") && vField.IsZero() {
 					return
 				}
@@ -205,7 +205,6 @@ func (c CustomerDetail) UrlValues() (url.Values, error) {
 				rwMutex.Lock()
 				urlValues.Add(queryField, vField.Interface().(string))
 				rwMutex.Unlock()
-
 			}
 		}(i)
 	}
@@ -214,7 +213,10 @@ func (c CustomerDetail) UrlValues() (url.Values, error) {
 	return urlValues, nil
 }
 
-func (c CustomerCriteria) UrlValues() (url.Values, error) {
+// URLValues godoc
+//
+//nolint:gocognit
+func (c Criteria) URLValues() (url.Values, error) {
 	if err := validator.New().Struct(c); err != nil {
 		return url.Values{}, err
 	}
@@ -234,9 +236,9 @@ func (c CustomerCriteria) UrlValues() (url.Values, error) {
 			tField := typeCriteria.Field(idx)
 			fieldTag := tField.Tag.Get("query")
 
-			if len(fieldTag) <= 0 {
+			if fieldTag == "" {
 				if vField.Kind() == reflect.Struct && vField.Type().ConvertibleTo(reflect.TypeOf(core.Criteria{})) {
-					coreCiteriaData, err := vField.Interface().(core.Criteria).UrlValues()
+					coreCiteriaData, err := vField.Interface().(core.Criteria).URLValues()
 					if err != nil {
 						return
 					}
@@ -285,7 +287,7 @@ func (c CustomerCriteria) UrlValues() (url.Values, error) {
 	return urlValues, nil
 }
 
-func (r SignUpForm) UrlValues() (url.Values, error) {
+func (r SignUpForm) URLValues() (url.Values, error) {
 	valider := validator.New()
 	if err := valider.RegisterValidation("rcpassword", validatePassword); err != nil {
 		return url.Values{}, err
@@ -308,7 +310,7 @@ func (r SignUpForm) UrlValues() (url.Values, error) {
 			vField := valueForm.Field(idx)
 			tField := typeForm.Field(idx)
 			fieldTag := tField.Tag.Get("query")
-			if len(fieldTag) > 0 {
+			if fieldTag != "" {
 				if strings.HasSuffix(fieldTag, "omitempty") && vField.IsZero() {
 					return
 				}
@@ -341,6 +343,6 @@ func matchPasswordWithPattern(password string, withRangeOfLength bool) bool {
 	}
 	rgxAlphaLower := regexp.MustCompile(`[a-z]`)
 	rgxAlphaUpper := regexp.MustCompile(`[A-Z]`)
-	rgxSymbol := regexp.MustCompile(`[\~\*\!\@\$\#\%\_\+\.\?\:\,\{\}]`)
+	rgxSymbol := regexp.MustCompile(`[\~\*!@\$#%\_\+.\?:,\{\}]`)
 	return rgxAlphaLower.MatchString(password) && rgxAlphaUpper.MatchString(password) && rgxSymbol.MatchString(password)
 }

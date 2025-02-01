@@ -1,3 +1,4 @@
+// Package core contains core functionality of the client.
 package core
 
 import (
@@ -23,7 +24,7 @@ type (
 )
 
 type Config struct {
-	ResellerId   string
+	ResellerID   string
 	APIKey       string
 	IsProduction bool
 }
@@ -46,10 +47,11 @@ type Criteria struct {
 }
 
 type Core interface {
-	CallApi(method, namespace, apiName string, data url.Values) (*http.Response, error)
+	CallAPI(method, namespace, apiName string, data url.Values) (*http.Response, error)
 	IsProduction() bool
 }
 
+// Const for status.
 const (
 	StatusActive              EntityStatus = "Active"
 	StatusInActive            EntityStatus = "InActive"
@@ -62,7 +64,7 @@ const (
 	StatusNotApplicable       EntityStatus = "Not Applicable"
 	StatusNotAvailable        EntityStatus = "NA"
 
-	AuthSms          AuthType = "sms"
+	AuthSMS          AuthType = "sms"
 	AuthGoogle       AuthType = "gauth"
 	AuthGoogleBackup AuthType = "gauthbackup"
 )
@@ -73,10 +75,10 @@ var (
 		false: "https://test.httpapi.com/api",
 	}
 
-	RgxEmail  = regexp.MustCompile("^(?:(?:(?:(?:[a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+(?:\\.([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+)*)|(?:(?:\\x22)(?:(?:(?:(?:\\x20|\\x09)*(?:\\x0d\\x0a))?(?:\\x20|\\x09)+)?(?:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]|\\x21|[\\x23-\\x5b]|[\\x5d-\\x7e]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[\\x01-\\x09\\x0b\\x0c\\x0d-\\x7f]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}]))))*(?:(?:(?:\\x20|\\x09)*(?:\\x0d\\x0a))?(\\x20|\\x09)+)?(?:\\x22))))@(?:(?:(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])(?:[a-zA-Z]|\\d|-|\\.|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.)+(?:(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])(?:[a-zA-Z]|\\d|-|\\.|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.?$")
-	RgxNumber = regexp.MustCompile("^[0-9]+$")
+	RgxEmail  = regexp.MustCompile("^(?:(?:(?:(?:[a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+(?:\\.([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+)*)|(?:(?:\\x22)(?:(?:(?:(?:\\x20|\\x09)*(?:\\x0d\\x0a))?(?:\\x20|\\x09)+)?(?:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]|\\x21|[\\x23-\\x5b]|[\\x5d-\\x7e]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[\\x01-\\x09\\x0b\\x0c\\x0d-\\x7f]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}]))))*(?:(?:(?:\\x20|\\x09)*(?:\\x0d\\x0a))?(\\x20|\\x09)+)?(?:\\x22))))@(?:(?:(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])(?:[a-zA-Z]|\\d|-|\\.|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.)+(?:(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])(?:[a-zA-Z]|\\d|-|\\.|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.?$") //nolint:lll
+	RgxNumber = regexp.MustCompile(`^\d+$`)
 
-	ErrRcApiUnsupportedMethod = errors.New("unsupported http method")
+	ErrRcAPIUnsupportedMethod = errors.New("unsupported http method")
 	ErrRcOperationFailed      = errors.New("operation failed")
 	ErrRcInvalidCredential    = errors.New("invalid credential")
 )
@@ -85,7 +87,10 @@ func (c *core) IsProduction() bool {
 	return c.cfg.IsProduction
 }
 
-func (c Criteria) UrlValues() (url.Values, error) {
+// URLValues godoc
+//
+//nolint:gocognit
+func (c Criteria) URLValues() (url.Values, error) {
 	if err := validator.New().Struct(c); err != nil {
 		return url.Values{}, err
 	}
@@ -105,7 +110,7 @@ func (c Criteria) UrlValues() (url.Values, error) {
 			tField := typeCriteria.Field(idx)
 			fieldTag := tField.Tag.Get("query")
 
-			if len(fieldTag) > 0 {
+			if fieldTag != "" {
 				if strings.HasSuffix(fieldTag, "omitempty") && vField.IsZero() {
 					return
 				}
@@ -116,7 +121,7 @@ func (c Criteria) UrlValues() (url.Values, error) {
 					if vField.Type().ConvertibleTo(reflect.TypeOf(time.Time{})) {
 						unixTimestamp := vField.Interface().(time.Time).Unix()
 						rwMutex.Lock()
-						urlValues.Add(queryField, strconv.FormatInt(unixTimestamp, 64))
+						urlValues.Add(queryField, strconv.FormatInt(unixTimestamp, 10))
 						rwMutex.Unlock()
 					}
 				case reflect.Slice:
@@ -152,13 +157,16 @@ func PrintResponse(data []byte) error {
 	if err := json.Indent(&buffer, data, "", "\t"); err != nil {
 		return err
 	}
-	buffer.WriteTo(os.Stdout)
+	if _, err := buffer.WriteTo(os.Stdout); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (c *core) CallApi(method, namespace, apiName string, data url.Values) (*http.Response, error) {
+func (c *core) CallAPI(method, namespace, apiName string, data url.Values) (*http.Response, error) {
 	urlPath := host[c.cfg.IsProduction] + "/" + namespace + "/" + apiName + ".json"
-	data.Add("auth-userid", c.cfg.ResellerId)
+	data.Add("auth-userid", c.cfg.ResellerID)
 	data.Add("api-key", c.cfg.APIKey)
 
 	switch method {
@@ -167,7 +175,7 @@ func (c *core) CallApi(method, namespace, apiName string, data url.Values) (*htt
 	case http.MethodPost:
 		return c.client.PostForm(urlPath, data)
 	}
-	return nil, ErrRcApiUnsupportedMethod
+	return nil, ErrRcAPIUnsupportedMethod
 }
 
 func New(cfg Config, client *http.Client) Core {

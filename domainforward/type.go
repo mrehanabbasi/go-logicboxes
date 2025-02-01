@@ -8,10 +8,10 @@ type StdResponse struct {
 }
 
 type DetailsDomainForward struct {
-	UrlMasking          core.JSONBool `json:"urlmasking"`
+	URLMasking          core.JSONBool `json:"urlmasking"`
 	PathForwarding      core.JSONBool `json:"pathforwarding"`
 	SubdomainForwarding core.JSONBool `json:"subdomainforwarding"`
-	IpAddress           string        `json:"ipaddress"`
+	IPAddress           string        `json:"ipaddress"`
 	DomainName          string        `json:"domainname"`
 }
 

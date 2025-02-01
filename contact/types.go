@@ -13,36 +13,36 @@ import (
 )
 
 type (
-	ContactType          string
+	Type                 string
 	Eligibility          string
 	RegistrantValidation map[string]map[Eligibility]core.JSONBool
-	ContactDetail        struct {
-		Id                   string             `json:"entityid,omitempty" query:"-" sponsor:"-"`
-		Type                 ContactType        `json:"type,omitempty" query:"type" validate:"required" sponsor:"-"`
-		CustomerId           string             `json:"customerid,omitempty" query:"customer-id" validate:"required,number" sponsor:"-"`
+	Detail               struct {
+		ID                   string             `json:"entityid,omitempty" query:"-" sponsor:"-"`
+		Type                 Type               `json:"type,omitempty" query:"type" validate:"required" sponsor:"-"`
+		CustomerID           string             `json:"customerid,omitempty" query:"customer-id" validate:"required,number" sponsor:"-"`
 		StatusSystem         string             `json:"currentstatus,omitempty" query:"-" sponsor:"-"`
 		StatusRegistry       string             `json:"contactstatus,omitempty" query:"-" sponsor:"-"`
 		ParentKey            string             `json:"parentkey,omitempty" query:"-" sponsor:"-"`
 		Name                 string             `json:"name,omitempty" query:"name" validate:"required,max=255" sponsor:"name"`
 		Email                string             `json:"emailaddr,omitempty" query:"email" validate:"required,email" sponsor:"email"`
 		Company              string             `json:"company,omitempty" query:"company" validate:"required,max=255" sponsor:"company"`
-		Address              string             `json:"address1,omitempty" query:"address-line-1" validate:"required,max=64" sponsor:"address-line-1"`
-		AddressLine2         string             `json:"address2,omitempty" query:"address-line-2,optional" validate:"-" sponsor:"address-line-2,optional"`
-		AddressLine3         string             `json:"address3,omitempty" query:"address-line-3,optional" validate:"-" sponsor:"address-line-3,optional"`
+		Address              string             `json:"address1,omitempty" query:"address-line-1" validate:"required,max=64" sponsor:"address-line-1"`     //nolint:lll
+		AddressLine2         string             `json:"address2,omitempty" query:"address-line-2,optional" validate:"-" sponsor:"address-line-2,optional"` //nolint:lll
+		AddressLine3         string             `json:"address3,omitempty" query:"address-line-3,optional" validate:"-" sponsor:"address-line-3,optional"` //nolint:lll
 		City                 string             `json:"city,omitempty" query:"city" validate:"required,max=64" sponsor:"city"`
-		State                string             `json:"state,omitempty" query:"state,optional" validate:"omitempty,max=64" sponsor:"state,optional"`
+		State                string             `json:"state,omitempty" query:"state,optional" validate:"omitempty,max=64" sponsor:"state,optional"` //nolint:lll
 		CountryCode          string             `json:"country,omitempty" query:"country" validate:"required,iso3166_1_alpha2" sponsor:"country"`
 		Zipcode              string             `json:"zip,omitempty" query:"zipcode" validate:"required,max=16" sponsor:"zipcode"`
 		PhoneCountryCode     string             `json:"telnocc,omitempty" query:"phone-cc" validate:"required,min=1,max=3" sponsor:"phone-cc"`
 		Phone                string             `json:"telno,omitempty" query:"phone" validate:"required,min=4,max=12" sponsor:"phone"`
-		FaxCountryCode       string             `json:"faxnocc,omitempty" query:"fax-cc,optional" validate:"omitempty,min=1,max=3" sponsor:"fax-cc,optional"`
-		Fax                  string             `json:"faxno,omitempty" query:"fax,optional" validate:"omitempty,min=4,max=12" sponsor:"fax,optional"`
+		FaxCountryCode       string             `json:"faxnocc,omitempty" query:"fax-cc,optional" validate:"omitempty,min=1,max=3" sponsor:"fax-cc,optional"` //nolint:lll
+		Fax                  string             `json:"faxno,omitempty" query:"fax,optional" validate:"omitempty,min=4,max=12" sponsor:"fax,optional"`        //nolint:lll
 		ClassName            string             `json:"classname,omitempty" query:"-" sponsor:"-"`
 		ClassKey             string             `json:"classkey,omitempty" query:"-" sponsor:"-"`
-		EntityActionId       string             `json:"eaqid,omitempty" query:"-" sponsor:"-"`
+		EntityActionID       string             `json:"eaqid,omitempty" query:"-" sponsor:"-"`
 		ActionCompleted      core.JSONUint16    `json:"actioncompleted,omitempty" query:"-" sponsor:"-"`
-		ContactId            string             `json:"contactid,omitempty" query:"-" sponsor:"-"`
-		EntityTypeId         string             `json:"entitytypeid,omitempty" query:"-" sponsor:"-"`
+		ContactID            string             `json:"contactid,omitempty" query:"-" sponsor:"-"`
+		EntityTypeID         string             `json:"entitytypeid,omitempty" query:"-" sponsor:"-"`
 		Description          string             `json:"description,omitempty" query:"-" sponsor:"-"`
 		TimeCreation         core.JSONTime      `json:"creationdt,omitempty" validate:"-" query:"-" sponsor:"-"`
 		TimeCreationRegistry core.JSONTimestamp `json:"timestamp,omitempty" validate:"-" query:"-" sponsor:"-"`
@@ -52,30 +52,30 @@ type (
 )
 
 type Action struct {
-	Id                string `json:"eaqid,omitempty"`
-	EntityId          string `json:"entityid,omitempty"`
+	ID                string `json:"eaqid,omitempty"`
+	EntityID          string `json:"entityid,omitempty"`
 	Type              string `json:"actiontype,omitempty"`
 	Description       string `json:"actiontypedesc,omitempty"`
 	Status            string `json:"actionstatus,omitempty"`
 	StatusDescription string `json:"actionstatusdesc,omitempty"`
 }
 
-type ContactCriteria struct {
-	CustomerId       string              `validate:"required,number" query:"customer-id"`
-	ContactIds       []string            `validate:"omitempty,dive,number" query:"contact-id,optional"`
+type Criteria struct {
+	CustomerID       string              `validate:"required,number" query:"customer-id"`
+	ContactIDs       []string            `validate:"omitempty,dive,number" query:"contact-id,optional"`
 	Statuses         []core.EntityStatus `validate:"omitempty" query:"status,optional"`
 	Name             string              `validate:"omitempty" query:"name,optional"`
 	Email            string              `validate:"omitempty,email" query:"email,optional"`
 	Company          string              `validate:"omitempty" query:"company,optional"`
-	Type             ContactType         `validate:"omitempty" query:"type,optional"`
+	Type             Type                `validate:"omitempty" query:"type,optional"`
 	IsIncludeInvalid bool                `validate:"omitempty" query:"include-invalid,optional"`
 }
 
-type ContactSearchResult struct {
+type SearchResult struct {
 	RequestedLimit  uint16
 	RequestedOffset uint16
 	TotalMatched    int
-	Contacts        []ContactDetail
+	Contacts        []Detail
 }
 
 type WHOISValidity struct {
@@ -83,25 +83,26 @@ type WHOISValidity struct {
 	InvalidData []string      `json:"invalidData,omitempty"`
 }
 
+// Const for contact types.
 const (
-	TypeContact   ContactType = "Contact"
-	TypeAt        ContactType = "AtContact"
-	TypeBr        ContactType = "BrContact"
-	TypeBrOrg     ContactType = "BrOrgContact"
-	TypeCa        ContactType = "CaContact"
-	TypeCl        ContactType = "ClContact"
-	TypeCn        ContactType = "CnContact"
-	TypeCo        ContactType = "CoContact"
-	TypeCoop      ContactType = "CoopContact"
-	TypeDe        ContactType = "DeContact"
-	TypeEs        ContactType = "EsContact"
-	TypeEu        ContactType = "EuContact"
-	TypeFr        ContactType = "FrContact"
-	TypeMx        ContactType = "MxContact"
-	TypeNl        ContactType = "NlContact"
-	TypeNyc       ContactType = "NycContact"
-	TypeUk        ContactType = "UkContact"
-	TypeUKService ContactType = "UkServiceContact"
+	TypeContact   Type = "Contact"
+	TypeAt        Type = "AtContact"
+	TypeBr        Type = "BrContact"
+	TypeBrOrg     Type = "BrOrgContact"
+	TypeCa        Type = "CaContact"
+	TypeCl        Type = "ClContact"
+	TypeCn        Type = "CnContact"
+	TypeCo        Type = "CoContact"
+	TypeCoop      Type = "CoopContact"
+	TypeDe        Type = "DeContact"
+	TypeEs        Type = "EsContact"
+	TypeEu        Type = "EuContact"
+	TypeFr        Type = "FrContact"
+	TypeMx        Type = "MxContact"
+	TypeNl        Type = "NlContact"
+	TypeNyc       Type = "NycContact"
+	TypeUk        Type = "UkContact"
+	TypeUKService Type = "UkServiceContact"
 
 	EligibilityDotASIA1 Eligibility = "CED_ASIAN_COUNTRY"
 	EligibilityDotASIA2 Eligibility = "CED_DETAILS"
@@ -113,7 +114,7 @@ const (
 	EligibilityDotUS    Eligibility = "APP_PREF_NEXUS"
 )
 
-func (c *ContactCriteria) UrlValues() (url.Values, error) {
+func (c *Criteria) URLValues() (url.Values, error) {
 	if err := validator.New().Struct(c); err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (c *ContactCriteria) UrlValues() (url.Values, error) {
 			vField := valueCiteria.Elem().Field(idx)
 			fieldTag := typeCiteria.Elem().Field(idx).Tag.Get("query")
 
-			if (len(fieldTag) <= 0 || fieldTag == "-") || (vField.IsZero() && strings.HasSuffix(fieldTag, ",optional")) {
+			if (fieldTag == "" || fieldTag == "-") || (vField.IsZero() && strings.HasSuffix(fieldTag, ",optional")) {
 				return
 			}
 
@@ -199,7 +200,7 @@ func (c *ContactCriteria) UrlValues() (url.Values, error) {
 // 	return &ret, nil
 // }
 
-func (c *ContactDetail) UrlValues() (*url.Values, error) {
+func (c *Detail) URLValues() (*url.Values, error) {
 	v := validator.New()
 	if err := v.Struct(c); err != nil {
 		return nil, err
@@ -213,7 +214,7 @@ func (c *ContactDetail) UrlValues() (*url.Values, error) {
 		vFieldCurrent := valueCurrent.Elem().Field(i)
 		tFieldCurrent := typeCurrent.Elem().Field(i)
 		tagFieldCurrent := tFieldCurrent.Tag.Get("query")
-		if len(tagFieldCurrent) <= 0 || tagFieldCurrent == "-" || vFieldCurrent.Kind() != reflect.String {
+		if tagFieldCurrent == "" || tagFieldCurrent == "-" || vFieldCurrent.Kind() != reflect.String {
 			continue
 		}
 		if vFieldCurrent.IsZero() {

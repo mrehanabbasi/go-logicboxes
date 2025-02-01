@@ -17,6 +17,7 @@ type (
 	countryDB  map[CountryISO]string
 )
 
+// Const for ISO countries.
 const (
 	CountryNetherlandsAntilles              CountryISO = "AN"
 	CountryCongo                            CountryISO = "CD"
@@ -278,11 +279,11 @@ const (
 )
 
 func fetchCountryDB(c core.Core) (countryDB, error) {
-	resp, err := c.CallApi(http.MethodGet, "country", "list", url.Values{})
+	resp, err := c.CallAPI(http.MethodGet, "country", "list", url.Values{})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -291,7 +292,7 @@ func fetchCountryDB(c core.Core) (countryDB, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -299,7 +300,7 @@ func fetchCountryDB(c core.Core) (countryDB, error) {
 	}
 
 	keyPairs := map[string]string{}
-	if err = json.Unmarshal(bytesResp, &keyPairs); err != nil {
+	if err := json.Unmarshal(bytesResp, &keyPairs); err != nil {
 		return nil, err
 	}
 

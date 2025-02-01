@@ -1,3 +1,4 @@
+// Package pricing contains API methods for pricing.
 package pricing
 
 import (
@@ -30,11 +31,11 @@ func (p *pricing) GettingCustomerPricing(customerID string) (CustomerPrice, erro
 	data := make(url.Values)
 	data.Add("customer-id", customerID)
 
-	resp, err := p.core.CallApi(http.MethodGet, "products", "customer-price", data)
+	resp, err := p.core.CallAPI(http.MethodGet, "products", "customer-price", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -43,16 +44,14 @@ func (p *pricing) GettingCustomerPricing(customerID string) (CustomerPrice, erro
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result CustomerPrice
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -63,11 +62,11 @@ func (p *pricing) GettingResellerPricing(resellerID string) (ResellerPrice, erro
 	data := make(url.Values)
 	data.Add("reseller-id", resellerID)
 
-	resp, err := p.core.CallApi(http.MethodGet, "products", "reseller-price", data)
+	resp, err := p.core.CallAPI(http.MethodGet, "products", "reseller-price", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -76,16 +75,14 @@ func (p *pricing) GettingResellerPricing(resellerID string) (ResellerPrice, erro
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result ResellerPrice
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -96,11 +93,11 @@ func (p *pricing) GettingResellerCostPricing(resellerID string) (ResellerCostPri
 	data := make(url.Values)
 	data.Add("reseller-id", resellerID)
 
-	resp, err := p.core.CallApi(http.MethodGet, "products", "reseller-cost-price", data)
+	resp, err := p.core.CallAPI(http.MethodGet, "products", "reseller-cost-price", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -109,16 +106,14 @@ func (p *pricing) GettingResellerCostPricing(resellerID string) (ResellerCostPri
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result ResellerCostPrice
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -128,11 +123,11 @@ func (p *pricing) GettingResellerCostPricing(resellerID string) (ResellerCostPri
 func (p *pricing) GettingPromoPrices() (PromoPrice, error) {
 	data := make(url.Values)
 
-	resp, err := p.core.CallApi(http.MethodGet, "products", "promo-details", data)
+	resp, err := p.core.CallAPI(http.MethodGet, "products", "promo-details", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -141,16 +136,14 @@ func (p *pricing) GettingPromoPrices() (PromoPrice, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result PromoPrice
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 

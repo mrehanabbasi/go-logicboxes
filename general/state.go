@@ -24,11 +24,11 @@ func fetchStateList(c core.Core, cc CountryISO) (States, error) {
 	data := url.Values{}
 	data.Add("country-code", string(cc))
 
-	resp, err := c.CallApi(http.MethodGet, "country", "state-list", data)
+	resp, err := c.CallAPI(http.MethodGet, "country", "state-list", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -37,7 +37,7 @@ func fetchStateList(c core.Core, cc CountryISO) (States, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
+		err := json.Unmarshal(bytesResp, &errResponse)
 		if err != nil {
 			return nil, err
 		}

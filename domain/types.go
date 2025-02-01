@@ -5,9 +5,9 @@ import "github.com/mrehanabbasi/go-resellerclub/core"
 type SortBy string
 
 type (
-	PrivacyState             string
-	DomainRegistrationStatus string
-	SortOrder                map[SortBy]bool
+	PrivacyState       string
+	RegistrationStatus string
+	SortOrder          map[SortBy]bool
 )
 
 type SuggestNames map[string]struct {
@@ -188,6 +188,7 @@ type DeleteResponse struct {
 	CurrentAction string `json:"currentaction"`
 }
 
+// Const for sort order.
 const (
 	SortByOrderID          SortBy = "orderid"
 	SortByCustomerID       SortBy = "customerid"
@@ -201,8 +202,8 @@ const (
 	PrivacyDisabled    PrivacyState = "false"
 	PrivacyUnsupported PrivacyState = "na"
 
-	DomRegUnknown       DomainRegistrationStatus = "unknown"
-	DomRegUnregistered  DomainRegistrationStatus = "available"
-	DomRegThroughUs     DomainRegistrationStatus = "regthroughus"
-	DomRegThroughOthers DomainRegistrationStatus = "regthroughothers"
+	DomRegUnknown       RegistrationStatus = "unknown"
+	DomRegUnregistered  RegistrationStatus = "available"
+	DomRegThroughUs     RegistrationStatus = "regthroughus"
+	DomRegThroughOthers RegistrationStatus = "regthroughothers"
 )

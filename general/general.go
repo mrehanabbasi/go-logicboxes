@@ -1,3 +1,4 @@
+// Package general contains general util functions and variables.
 package general
 
 import (

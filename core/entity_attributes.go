@@ -14,7 +14,7 @@ type EntityAttributes interface {
 	Add(key, val string)
 	Get(key string) string
 	Del(key string)
-	UrlValues() url.Values
+	URLValues() url.Values
 	CopyTo(dest *url.Values)
 }
 
@@ -54,7 +54,7 @@ func (e *entityAttributes) Del(key string) {
 	delete(e.data, key)
 }
 
-func (e *entityAttributes) UrlValues() url.Values {
+func (e *entityAttributes) URLValues() url.Values {
 	ret := url.Values{}
 	wg := sync.WaitGroup{}
 	rwMutex := sync.RWMutex{}

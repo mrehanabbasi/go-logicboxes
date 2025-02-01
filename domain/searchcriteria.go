@@ -25,7 +25,10 @@ type OrderCriteria struct {
 	TimeExpiryEnd   time.Time           `validate:"omitempty" query:"expiry-date-start,omitempty"`
 }
 
-func (c OrderCriteria) UrlValues() (url.Values, error) {
+// URLValues godoc
+//
+//nolint:gocognit,gocyclo,funlen
+func (c OrderCriteria) URLValues() (url.Values, error) {
 	if err := validator.New().Struct(c); err != nil {
 		return url.Values{}, err
 	}
@@ -44,7 +47,7 @@ func (c OrderCriteria) UrlValues() (url.Values, error) {
 			vField := valueCriteria.Field(idx)
 			tField := typeCriteria.Field(idx)
 			fieldTag := tField.Tag.Get("query")
-			if len(fieldTag) > 0 {
+			if fieldTag != "" {
 				if strings.HasSuffix(fieldTag, "omitempty") && vField.IsZero() {
 					return
 				}

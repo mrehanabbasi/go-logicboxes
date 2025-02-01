@@ -10,7 +10,7 @@ import (
 )
 
 var d = New(core.New(core.Config{
-	ResellerId:   os.Getenv("RESELLER_ID"),
+	ResellerID:   os.Getenv("RESELLER_ID"),
 	APIKey:       os.Getenv("API_KEY"),
 	IsProduction: false,
 }, http.DefaultClient))
@@ -18,7 +18,7 @@ var d = New(core.New(core.Config{
 var (
 	domainName = os.Getenv("TEST_DOMAIN_NAME")
 	orderID    = os.Getenv("TEST_ORDER_ID")
-	cns        = os.Getenv("TEST_CNS")
+	_          = os.Getenv("TEST_CNS") // cns
 	authCode   = os.Getenv("TEST_AUTH_CODE")
 )
 

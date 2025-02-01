@@ -1,3 +1,4 @@
+// Package domainforward contains APIs to forward domains.
 package domainforward
 
 import (
@@ -13,9 +14,19 @@ import (
 )
 
 type DomainForward interface {
-	ActivatingDomainForwardingService(orderID, subDomainPrefix, forwardTo string, urlMasking bool, metaTags, noframes string, subDomainForwarding, pathForwarding bool) (*StdResponse, error)
+	ActivatingDomainForwardingService(
+		orderID, subDomainPrefix, forwardTo string,
+		urlMasking bool,
+		metaTags, noframes string,
+		subDomainForwarding, pathForwarding bool,
+	) (*StdResponse, error)
 	GettingDetailsDomainForwardingService(orderID string, includeSubdomain bool) (*DetailsDomainForward, error)
-	ManagingDomainForwardingService(orderID, subDomainPrefix, forwardTo string, urlMasking bool, metaTags, noframes string, subDomainForwarding, pathForwarding bool) (*StdResponse, error)
+	ManagingDomainForwardingService(
+		orderID, subDomainPrefix, forwardTo string,
+		urlMasking bool,
+		metaTags, noframes string,
+		subDomainForwarding, pathForwarding bool,
+	) (*StdResponse, error)
 	GettingDNSRecords(domainName string) ([]*DNSRecord, error)
 	RemoveDomainForwardingForDomain(domainName string) (bool, error)
 	DisableDomainForwardingForSubDomain(orderID, subDomainPrefix string) (bool, error)
@@ -29,7 +40,12 @@ type domainForward struct {
 	core core.Core
 }
 
-func (d *domainForward) ActivatingDomainForwardingService(orderID, subDomainPrefix, forwardTo string, urlMasking bool, metaTags, noframes string, subDomainForwarding, pathForwarding bool) (*StdResponse, error) {
+func (d *domainForward) ActivatingDomainForwardingService(
+	orderID, subDomainPrefix, forwardTo string,
+	urlMasking bool,
+	metaTags, noframes string,
+	subDomainForwarding, pathForwarding bool,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("sub-domain-prefix", subDomainPrefix)
@@ -40,11 +56,11 @@ func (d *domainForward) ActivatingDomainForwardingService(orderID, subDomainPref
 	data.Add("sub-domain-forwarding", strconv.FormatBool(subDomainForwarding))
 	data.Add("path-forwarding", strconv.FormatBool(pathForwarding))
 
-	resp, err := d.core.CallApi(http.MethodPost, "domainforward", "activate", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "activate", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -53,16 +69,14 @@ func (d *domainForward) ActivatingDomainForwardingService(orderID, subDomainPref
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -74,11 +88,11 @@ func (d *domainForward) GettingDetailsDomainForwardingService(orderID string, in
 	data.Add("order-id", orderID)
 	data.Add("include-subdomain", strconv.FormatBool(includeSubdomain))
 
-	resp, err := d.core.CallApi(http.MethodGet, "domainforward", "details", data)
+	resp, err := d.core.CallAPI(http.MethodGet, "domainforward", "details", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -87,23 +101,26 @@ func (d *domainForward) GettingDetailsDomainForwardingService(orderID string, in
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result DetailsDomainForward
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
 	return &result, nil
 }
 
-func (d *domainForward) ManagingDomainForwardingService(orderID, subDomainPrefix, forwardTo string, urlMasking bool, metaTags, noframes string, subDomainForwarding, pathForwarding bool) (*StdResponse, error) {
+func (d *domainForward) ManagingDomainForwardingService(
+	orderID, subDomainPrefix, forwardTo string,
+	urlMasking bool,
+	metaTags, noframes string,
+	subDomainForwarding, pathForwarding bool,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("sub-domain-prefix", subDomainPrefix)
@@ -114,11 +131,11 @@ func (d *domainForward) ManagingDomainForwardingService(orderID, subDomainPrefix
 	data.Add("sub-domain-forwarding", strconv.FormatBool(subDomainForwarding))
 	data.Add("path-forwarding", strconv.FormatBool(pathForwarding))
 
-	resp, err := d.core.CallApi(http.MethodPost, "domainforward", "manage", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "manage", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -127,16 +144,14 @@ func (d *domainForward) ManagingDomainForwardingService(orderID, subDomainPrefix
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result StdResponse
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -147,11 +162,11 @@ func (d *domainForward) GettingDNSRecords(domainName string) ([]*DNSRecord, erro
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 
-	resp, err := d.core.CallApi(http.MethodGet, "domainforward", "dns-records", data)
+	resp, err := d.core.CallAPI(http.MethodGet, "domainforward", "dns-records", data)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -160,16 +175,14 @@ func (d *domainForward) GettingDNSRecords(domainName string) ([]*DNSRecord, erro
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result []*DNSRecord
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return nil, err
 	}
 
@@ -180,11 +193,11 @@ func (d *domainForward) RemoveDomainForwardingForDomain(domainName string) (bool
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 
-	resp, err := d.core.CallApi(http.MethodPost, "domainforward", "delete", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "delete", data)
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -193,16 +206,14 @@ func (d *domainForward) RemoveDomainForwardingForDomain(domainName string) (bool
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return false, err
 		}
 		return false, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result bool
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return false, err
 	}
 
@@ -214,11 +225,11 @@ func (d *domainForward) DisableDomainForwardingForSubDomain(orderID, subDomainPr
 	data.Add("order-id", orderID)
 	data.Add("sub-domain-prefix", subDomainPrefix)
 
-	resp, err := d.core.CallApi(http.MethodPost, "domainforward", "sub-domain-record/delete", data)
+	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "sub-domain-record/delete", data)
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -227,16 +238,14 @@ func (d *domainForward) DisableDomainForwardingForSubDomain(orderID, subDomainPr
 
 	if resp.StatusCode != http.StatusOK {
 		errResponse := core.JSONStatusResponse{}
-		err = json.Unmarshal(bytesResp, &errResponse)
-		if err != nil {
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
 			return false, err
 		}
 		return false, errors.New(strings.ToLower(errResponse.Message))
 	}
 
 	var result bool
-	err = json.Unmarshal(bytesResp, &result)
-	if err != nil {
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
 		return false, err
 	}
 
