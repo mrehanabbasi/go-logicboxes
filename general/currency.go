@@ -10,11 +10,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/xpartacvs/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-resellerclub/core"
 )
 
-type CurrencyISO string
-type currencyDB map[CurrencyISO]Currency
+type (
+	CurrencyISO string
+	currencyDB  map[CurrencyISO]Currency
+)
 
 type Currency struct {
 	ISO  CurrencyISO

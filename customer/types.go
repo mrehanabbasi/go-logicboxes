@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/xpartacvs/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-resellerclub/core"
 )
 
 type loginToken struct {

@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mrehanabbasi/go-resellerclub/core"
 	"github.com/stretchr/testify/require"
-	"github.com/xpartacvs/go-resellerclub/core"
 )
 
 var d = New(core.New(

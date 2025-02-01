@@ -9,11 +9,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/xpartacvs/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-resellerclub/core"
 )
 
-type CountryISO string
-type countryDB map[CountryISO]string
+type (
+	CountryISO string
+	countryDB  map[CountryISO]string
+)
 
 const (
 	CountryNetherlandsAntilles              CountryISO = "AN"

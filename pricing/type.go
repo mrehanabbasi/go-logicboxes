@@ -1,6 +1,6 @@
 package pricing
 
-import "github.com/xpartacvs/go-resellerclub/core"
+import "github.com/mrehanabbasi/go-resellerclub/core"
 
 type CustomerPrice map[string]map[string]map[string]float64
 

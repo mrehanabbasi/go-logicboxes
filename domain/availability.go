@@ -1,6 +1,6 @@
 package domain
 
-import "github.com/xpartacvs/go-resellerclub/core"
+import "github.com/mrehanabbasi/go-resellerclub/core"
 
 type DomainRegistration struct {
 	Key    core.DomainKey           `json:"classkey"`

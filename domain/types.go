@@ -1,12 +1,14 @@
 package domain
 
-import "github.com/xpartacvs/go-resellerclub/core"
+import "github.com/mrehanabbasi/go-resellerclub/core"
 
 type SortBy string
 
-type PrivacyState string
-type DomainRegistrationStatus string
-type SortOrder map[SortBy]bool
+type (
+	PrivacyState             string
+	DomainRegistrationStatus string
+	SortOrder                map[SortBy]bool
+)
 
 type SuggestNames map[string]struct {
 	Status string         `json:"status"`

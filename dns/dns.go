@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/xpartacvs/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-resellerclub/core"
 )
 
 type DNS interface {
