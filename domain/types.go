@@ -1,6 +1,6 @@
 package domain
 
-import "github.com/mrehanabbasi/go-resellerclub/core"
+import "github.com/mrehanabbasi/go-logicboxes/core"
 
 type SortBy string
 

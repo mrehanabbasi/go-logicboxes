@@ -45,9 +45,9 @@ linters-settings:
   lll:
     line-length: 140
   goimports:
-    local-prefixes: github.com/mrehanabbasi/go-resellerclub
+    local-prefixes: github.com/mrehanabbasi/go-logicboxes
   gofumpt:
-    module-path: github.com/mrehanabbasi/go-resellerclub
+    module-path: github.com/mrehanabbasi/go-logicboxes
   gocritic:
     enabled-tags:
       - diagnostic

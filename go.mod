@@ -1,11 +1,10 @@
-module github.com/mrehanabbasi/go-resellerclub
+module github.com/mrehanabbasi/go-logicboxes
 
 go 1.23
 
 require (
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/stretchr/testify v1.10.0
-	github.com/xpartacvs/go-resellerclub v0.0.0-20210913051230-8276fdf9daec
 )
 
 require (

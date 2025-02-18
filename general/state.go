@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mrehanabbasi/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-logicboxes/core"
 )
 
 type stateMap map[string]string

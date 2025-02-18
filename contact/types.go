@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/mrehanabbasi/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-logicboxes/core"
 )
 
 type (

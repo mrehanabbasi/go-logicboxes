@@ -1,6 +1,6 @@
 package domainforward
 
-import "github.com/mrehanabbasi/go-resellerclub/core"
+import "github.com/mrehanabbasi/go-logicboxes/core"
 
 type StdResponse struct {
 	Status  string `json:"status"`

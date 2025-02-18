@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mrehanabbasi/go-resellerclub/core"
+	"github.com/mrehanabbasi/go-logicboxes/core"
 	"github.com/stretchr/testify/require"
 )
 
