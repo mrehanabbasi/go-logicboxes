@@ -179,8 +179,13 @@ func (c *core) CallAPI(method, namespace, apiName string, data url.Values) (*htt
 }
 
 func New(cfg Config, client *http.Client) Core {
+	var c *http.Client
+	if client == nil {
+		c = http.DefaultClient
+	}
+
 	return &core{
 		cfg:    cfg,
-		client: client,
+		client: c,
 	}
 }
