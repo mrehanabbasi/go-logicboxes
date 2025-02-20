@@ -2,6 +2,7 @@
 package customer
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -19,23 +20,23 @@ type customer struct {
 }
 
 type Customer interface {
-	SignUp(regForm *SignUpForm) error
-	ChangePassword(customerID, newPassword string) error
-	Details(customerIDOrEmail string) (*Detail, error)
-	Delete(customerID string) error
-	ForgotPassword(username string) error
-	Suspension(toggle bool, customerID, reason string) error
-	Search(criteria Criteria, offset, limit uint16) (*SearchResult, error)
-	Modify(customerIDOrEmail string, modification Detail) error
-	GenerateOTP(customerID string) error
-	VerifyOTP(customerID, otp string, authType core.AuthType) (bool, error)
-	GenerateToken(username, password, ip string) (string, error)
-	GenerateLoginToken(customerID, ip, dashboardBaseURL string) (LoginToken, error)
-	Authenticate(username, password string) (*Detail, *ErrorAuthentication)
-	AuthenticateToken(token string, withHistory bool) (*Detail, error)
+	SignUp(ctx context.Context, regForm *SignUpForm) error
+	ChangePassword(ctx context.Context, customerID, newPassword string) error
+	Details(ctx context.Context, customerIDOrEmail string) (*Detail, error)
+	Delete(ctx context.Context, customerID string) error
+	ForgotPassword(ctx context.Context, username string) error
+	Suspension(ctx context.Context, toggle bool, customerID, reason string) error
+	Search(ctx context.Context, criteria Criteria, offset, limit uint16) (*SearchResult, error)
+	Modify(ctx context.Context, customerIDOrEmail string, modification Detail) error
+	GenerateOTP(ctx context.Context, customerID string) error
+	VerifyOTP(ctx context.Context, customerID, otp string, authType core.AuthType) (bool, error)
+	GenerateToken(ctx context.Context, username, password, ip string) (string, error)
+	GenerateLoginToken(ctx context.Context, customerID, ip, dashboardBaseURL string) (LoginToken, error)
+	Authenticate(ctx context.Context, username, password string) (*Detail, *ErrorAuthentication)
+	AuthenticateToken(ctx context.Context, token string, withHistory bool) (*Detail, error)
 }
 
-func (c *customer) AuthenticateToken(token string, withHistory bool) (*Detail, error) {
+func (c *customer) AuthenticateToken(ctx context.Context, token string, withHistory bool) (*Detail, error) {
 	data := url.Values{}
 	data.Add("token", token)
 
@@ -44,7 +45,7 @@ func (c *customer) AuthenticateToken(token string, withHistory bool) (*Detail, e
 		funcName = "authenticate-token-without-history"
 	}
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers", funcName, data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers", funcName, data)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,7 @@ func (c *customer) AuthenticateToken(token string, withHistory bool) (*Detail, e
 	return ret, nil
 }
 
-func (c *customer) GenerateLoginToken(customerID, ip, dashboardBaseURL string) (LoginToken, error) {
+func (c *customer) GenerateLoginToken(ctx context.Context, customerID, ip, dashboardBaseURL string) (LoginToken, error) {
 	if !core.RgxNumber.MatchString(customerID) {
 		return nil, errors.New("invalid format on customerid")
 	}
@@ -89,7 +90,7 @@ func (c *customer) GenerateLoginToken(customerID, ip, dashboardBaseURL string) (
 	data.Add("customer-id", customerID)
 	data.Add("ip", ip)
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers", "generate-login-token", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers", "generate-login-token", data)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (c *customer) GenerateLoginToken(customerID, ip, dashboardBaseURL string) (
 	return token, nil
 }
 
-func (c *customer) GenerateToken(username, password, ip string) (string, error) {
+func (c *customer) GenerateToken(ctx context.Context, username, password, ip string) (string, error) {
 	if !matchPasswordWithPattern(password, true) {
 		return "", errors.New("invalid format on password")
 	}
@@ -130,7 +131,7 @@ func (c *customer) GenerateToken(username, password, ip string) (string, error) 
 	data.Add("passwd", password)
 	data.Add("ip", ip)
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers", "generate-token", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers", "generate-token", data)
 	if err != nil {
 		return "", err
 	}
@@ -152,7 +153,7 @@ func (c *customer) GenerateToken(username, password, ip string) (string, error) 
 	return string(bytesResp), nil
 }
 
-func (c *customer) Authenticate(username, password string) (*Detail, *ErrorAuthentication) {
+func (c *customer) Authenticate(ctx context.Context, username, password string) (*Detail, *ErrorAuthentication) {
 	errAuth := &ErrorAuthentication{
 		JSONStatusResponse: core.JSONStatusResponse{
 			Status:  "ERROR",
@@ -169,7 +170,7 @@ func (c *customer) Authenticate(username, password string) (*Detail, *ErrorAuthe
 	data.Add("username", username)
 	data.Add("passwd", password)
 
-	resp, err := c.core.CallAPI(http.MethodPost, "customers/v2", "authenticate", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers/v2", "authenticate", data)
 	if err != nil {
 		errAuth.Message = err.Error()
 		return nil, errAuth
@@ -200,7 +201,7 @@ func (c *customer) Authenticate(username, password string) (*Detail, *ErrorAuthe
 	return ret, nil
 }
 
-func (c *customer) VerifyOTP(customerID, otp string, authType core.AuthType) (bool, error) {
+func (c *customer) VerifyOTP(ctx context.Context, customerID, otp string, authType core.AuthType) (bool, error) {
 	if !core.RgxNumber.MatchString(customerID) {
 		return false, core.ErrRcInvalidCredential
 	}
@@ -210,7 +211,7 @@ func (c *customer) VerifyOTP(customerID, otp string, authType core.AuthType) (bo
 	data.Add("otp", otp)
 	data.Add("type", string(authType))
 
-	resp, err := c.core.CallAPI(http.MethodPost, "customers/authenticate", "verify-otp", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers/authenticate", "verify-otp", data)
 	if err != nil {
 		return false, err
 	}
@@ -233,12 +234,12 @@ func (c *customer) VerifyOTP(customerID, otp string, authType core.AuthType) (bo
 	return strconv.ParseBool(string(bytesResp))
 }
 
-func (c *customer) GenerateOTP(customerID string) error {
+func (c *customer) GenerateOTP(ctx context.Context, customerID string) error {
 	if !core.RgxNumber.MatchString(customerID) {
 		return core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers/authenticate", "generate-otp", url.Values{"customerid": {customerID}})
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers/authenticate", "generate-otp", url.Values{"customerid": {customerID}})
 	if err != nil {
 		return err
 	}
@@ -269,8 +270,8 @@ func (c *customer) GenerateOTP(customerID string) error {
 	return nil
 }
 
-func (c *customer) Modify(customerIDOrEmail string, modification Detail) error {
-	customerBefore, err := c.Details(customerIDOrEmail)
+func (c *customer) Modify(ctx context.Context, customerIDOrEmail string, modification Detail) error {
+	customerBefore, err := c.Details(ctx, customerIDOrEmail)
 	if err != nil {
 		return nil
 	}
@@ -285,7 +286,7 @@ func (c *customer) Modify(customerIDOrEmail string, modification Detail) error {
 	}
 	data.Add("customer-id", customerBefore.ID)
 
-	resp, err := c.core.CallAPI(http.MethodPost, "customers", "modify", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers", "modify", data)
 	if err != nil {
 		return err
 	}
@@ -316,7 +317,7 @@ func (c *customer) Modify(customerIDOrEmail string, modification Detail) error {
 	return nil
 }
 
-func (c *customer) Search(criteria Criteria, offset, limit uint16) (*SearchResult, error) {
+func (c *customer) Search(ctx context.Context, criteria Criteria, offset, limit uint16) (*SearchResult, error) {
 	if limit < 10 || limit > 500 {
 		return nil, errors.New("limit must be in range of 10 to 500")
 	}
@@ -331,7 +332,7 @@ func (c *customer) Search(criteria Criteria, offset, limit uint16) (*SearchResul
 	data.Add("no-of-records", strconv.FormatUint(uint64(limit), 10))
 	data.Add("page-no", strconv.FormatUint(uint64(offset), 10))
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers", "search", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers", "search", data)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +386,7 @@ func (c *customer) Search(criteria Criteria, offset, limit uint16) (*SearchResul
 	}, nil
 }
 
-func (c *customer) Suspension(toggle bool, customerID, reason string) error {
+func (c *customer) Suspension(ctx context.Context, toggle bool, customerID, reason string) error {
 	if !core.RgxNumber.MatchString(customerID) {
 		return core.ErrRcInvalidCredential
 	}
@@ -399,7 +400,7 @@ func (c *customer) Suspension(toggle bool, customerID, reason string) error {
 	data.Add("customer-id", customerID)
 	data.Add("reason", reason)
 
-	resp, err := c.core.CallAPI(http.MethodPost, "customers", funcName, data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers", funcName, data)
 	if err != nil {
 		return err
 	}
@@ -430,12 +431,12 @@ func (c *customer) Suspension(toggle bool, customerID, reason string) error {
 	return nil
 }
 
-func (c *customer) ForgotPassword(username string) error {
+func (c *customer) ForgotPassword(ctx context.Context, username string) error {
 	if !core.RgxEmail.MatchString(username) {
 		return core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers", "forgot-password", url.Values{"username": {username}})
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers", "forgot-password", url.Values{"username": {username}})
 	if err != nil {
 		return err
 	}
@@ -466,12 +467,12 @@ func (c *customer) ForgotPassword(username string) error {
 	return nil
 }
 
-func (c *customer) Delete(customerID string) error {
+func (c *customer) Delete(ctx context.Context, customerID string) error {
 	if !core.RgxNumber.MatchString(customerID) {
 		return core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallAPI(http.MethodPost, "customers", "delete", url.Values{"customer-id": {customerID}})
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers", "delete", url.Values{"customer-id": {customerID}})
 	if err != nil {
 		return err
 	}
@@ -502,7 +503,7 @@ func (c *customer) Delete(customerID string) error {
 	return nil
 }
 
-func (c *customer) Details(customerIDOrEmail string) (*Detail, error) {
+func (c *customer) Details(ctx context.Context, customerIDOrEmail string) (*Detail, error) {
 	data := url.Values{}
 
 	var funcName, query string
@@ -518,7 +519,7 @@ func (c *customer) Details(customerIDOrEmail string) (*Detail, error) {
 	}
 	data.Add(query, customerIDOrEmail)
 
-	resp, err := c.core.CallAPI(http.MethodGet, "customers", funcName, data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "customers", funcName, data)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +547,7 @@ func (c *customer) Details(customerIDOrEmail string) (*Detail, error) {
 	return ret, nil
 }
 
-func (c *customer) ChangePassword(customerID, newPassword string) error {
+func (c *customer) ChangePassword(ctx context.Context, customerID, newPassword string) error {
 	if !matchPasswordWithPattern(newPassword, true) {
 		return errors.New("invalid password format")
 	}
@@ -555,7 +556,7 @@ func (c *customer) ChangePassword(customerID, newPassword string) error {
 	data.Add("customer-id", customerID)
 	data.Add("new-passwd", newPassword)
 
-	resp, err := c.core.CallAPI(http.MethodPost, "customers/v2", "change-password", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers/v2", "change-password", data)
 	if err != nil {
 		return err
 	}
@@ -586,12 +587,12 @@ func (c *customer) ChangePassword(customerID, newPassword string) error {
 	return nil
 }
 
-func (c *customer) SignUp(regForm *SignUpForm) error {
+func (c *customer) SignUp(ctx context.Context, regForm *SignUpForm) error {
 	urlValues, err := regForm.URLValues()
 	if err != nil {
 		return err
 	}
-	resp, err := c.core.CallAPI(http.MethodPost, "customers/v2", "signup", urlValues)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "customers/v2", "signup", urlValues)
 	if err != nil {
 		return err
 	}

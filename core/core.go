@@ -3,8 +3,10 @@ package core
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -47,7 +49,7 @@ type Criteria struct {
 }
 
 type Core interface {
-	CallAPI(method, namespace, apiName string, data url.Values) (*http.Response, error)
+	CallAPI(ctx context.Context, method, namespace, apiName string, data url.Values) (*http.Response, error)
 	IsProduction() bool
 }
 
@@ -164,18 +166,21 @@ func PrintResponse(data []byte) error {
 	return nil
 }
 
-func (c *core) CallAPI(method, namespace, apiName string, data url.Values) (*http.Response, error) {
+func (c *core) CallAPI(ctx context.Context, method, namespace, apiName string, data url.Values) (*http.Response, error) {
 	urlPath := host[c.cfg.IsProduction] + "/" + namespace + "/" + apiName + ".json"
 	data.Add("auth-userid", c.cfg.ResellerID)
 	data.Add("api-key", c.cfg.APIKey)
 
-	switch method {
-	case http.MethodGet:
-		return c.client.Get(urlPath + "?" + data.Encode())
-	case http.MethodPost:
-		return c.client.PostForm(urlPath, data)
+	if method != http.MethodGet && method != http.MethodPost {
+		return nil, ErrRcAPIUnsupportedMethod
 	}
-	return nil, ErrRcAPIUnsupportedMethod
+
+	req, err := http.NewRequestWithContext(ctx, method, urlPath+"?"+data.Encode(), http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	return c.client.Do(req)
 }
 
 func New(cfg Config, client *http.Client) Core {

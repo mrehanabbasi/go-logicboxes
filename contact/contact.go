@@ -2,6 +2,7 @@
 package contact
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -20,21 +21,25 @@ type contact struct {
 }
 
 type Contact interface {
-	Add(details *Detail, attributes core.EntityAttributes) error
-	Details(contactID string) (*Detail, error)
-	Delete(contactID string) (*Action, error)
-	Search(criteria Criteria, offset, limit uint16) (*SearchResult, error)
-	SetDefault(customerID, registrantContactID, adminContactID, techContactID, billingContactID string, types []Type) error
-	Default(customerID string, types []Type) (map[string]Detail, error)
-	ValidateRegistrant(contactID string, eligibilities []Eligibility) (RegistrantValidation, error)
-	AddExtraDetails(contactID string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error
-	DotCAAgreement() (map[string]string, error)
-	// AddDotCOOPSponsor(customerId string, details ContactDetail) (string, error)
-	// DotCOOPSponsors(customerId string) error
+	Add(ctx context.Context, details *Detail, attributes core.EntityAttributes) error
+	Details(ctx context.Context, contactID string) (*Detail, error)
+	Delete(ctx context.Context, contactID string) (*Action, error)
+	Search(ctx context.Context, criteria Criteria, offset, limit uint16) (*SearchResult, error)
+	SetDefault(
+		ctx context.Context,
+		customerID, registrantContactID, adminContactID, techContactID, billingContactID string,
+		types []Type,
+	) error
+	Default(ctx context.Context, customerID string, types []Type) (map[string]Detail, error)
+	ValidateRegistrant(ctx context.Context, contactID string, eligibilities []Eligibility) (RegistrantValidation, error)
+	AddExtraDetails(ctx context.Context, contactID string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error
+	DotCAAgreement(ctx context.Context) (map[string]string, error)
+	// AddDotCOOPSponsor(ctx context.Context, customerId string, details ContactDetail) (string, error)
+	// DotCOOPSponsors(ctx context.Context, customerId string) error
 }
 
-func (c *contact) DotCAAgreement() (map[string]string, error) {
-	resp, err := c.core.CallAPI(http.MethodGet, "contacts/dotca", "registrantagreement", url.Values{})
+func (c *contact) DotCAAgreement(ctx context.Context) (map[string]string, error) {
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "contacts/dotca", "registrantagreement", url.Values{})
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +66,12 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 	return ret, nil
 }
 
-// func (c *contact) DotCOOPSponsors(customerId string) error {
+// func (c *contact) DotCOOPSponsors(ctx context.Context, customerId string) error {
 // 	if !core.RgxNumber.MatchString(customerId) {
 // 		return core.ErrRcInvalidCredential
 // 	}
 
-// 	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "sponsors", url.Values{"customer-id": []string{customerId}})
+// 	resp, err := c.core.CallAPI(ctx, http.MethodGet, "contacts", "sponsors", url.Values{"customer-id": []string{customerId}})
 // 	if err != nil {
 // 		return err
 // 	}
@@ -88,7 +93,7 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 // 	return nil
 // }
 
-// func (c *contact) AddDotCOOPSponsor(customerId string, details ContactDetail) (string, error) {
+// func (c *contact) AddDotCOOPSponsor(ctx context.Context, customerId string, details ContactDetail) (string, error) {
 // 	if !core.RgxNumber.MatchString(customerId) {
 // 		return "", core.ErrRcInvalidCredential
 // 	}
@@ -103,7 +108,7 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 // 	}
 // 	data.Add("customer-id", customerId)
 
-// 	resp, err := c.core.CallAPI(http.MethodPost, "contacts/coop", "add-sponsor", *data)
+// 	resp, err := c.core.CallAPI(ctx, http.MethodPost, "contacts/coop", "add-sponsor", *data)
 // 	if err != nil {
 // 		return "", err
 // 	}
@@ -125,7 +130,12 @@ func (c *contact) DotCAAgreement() (map[string]string, error) {
 // 	return string(bytesResp), nil
 // }
 
-func (c *contact) AddExtraDetails(contactID string, attributes core.EntityAttributes, domainKeys []core.DomainKey) error {
+func (c *contact) AddExtraDetails(
+	ctx context.Context,
+	contactID string,
+	attributes core.EntityAttributes,
+	domainKeys []core.DomainKey,
+) error {
 	if !core.RgxNumber.MatchString(contactID) {
 		return core.ErrRcInvalidCredential
 	}
@@ -151,7 +161,7 @@ func (c *contact) AddExtraDetails(contactID string, attributes core.EntityAttrib
 	}
 	wg.Wait()
 
-	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "set-details", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "contacts", "set-details", data)
 	if err != nil {
 		return err
 	}
@@ -181,7 +191,7 @@ func (c *contact) AddExtraDetails(contactID string, attributes core.EntityAttrib
 	return nil
 }
 
-func (c *contact) ValidateRegistrant(contactID string, eligibilities []Eligibility) (RegistrantValidation, error) {
+func (c *contact) ValidateRegistrant(ctx context.Context, contactID string, eligibilities []Eligibility) (RegistrantValidation, error) {
 	if !core.RgxNumber.MatchString(contactID) {
 		return nil, core.ErrRcInvalidCredential
 	}
@@ -206,7 +216,7 @@ func (c *contact) ValidateRegistrant(contactID string, eligibilities []Eligibili
 	}
 	wg.Wait()
 
-	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "validate-registrant", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "contacts", "validate-registrant", data)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +244,7 @@ func (c *contact) ValidateRegistrant(contactID string, eligibilities []Eligibili
 }
 
 //nolint:funlen
-func (c *contact) Default(customerID string, types []Type) (map[string]Detail, error) {
+func (c *contact) Default(ctx context.Context, customerID string, types []Type) (map[string]Detail, error) {
 	if len(types) == 0 {
 		return nil, errors.New("contact types must not empty")
 	}
@@ -248,7 +258,7 @@ func (c *contact) Default(customerID string, types []Type) (map[string]Detail, e
 		data.Add("type", string(t))
 	}
 
-	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "default", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "contacts", "default", data)
 	if err != nil {
 		return nil, err
 	}
@@ -316,6 +326,7 @@ func (c *contact) Default(customerID string, types []Type) (map[string]Detail, e
 }
 
 func (c *contact) SetDefault(
+	ctx context.Context,
 	customerID, regContactID, adminContactID, techContactID, billContactID string,
 	types []Type,
 ) error {
@@ -339,7 +350,7 @@ func (c *contact) SetDefault(
 		data.Add("type", string(t))
 	}
 
-	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "modDefault", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "contacts", "modDefault", data)
 	if err != nil {
 		return err
 	}
@@ -361,7 +372,7 @@ func (c *contact) SetDefault(
 	return nil
 }
 
-func (c *contact) Search(criteria Criteria, offset, limit uint16) (*SearchResult, error) {
+func (c *contact) Search(ctx context.Context, criteria Criteria, offset, limit uint16) (*SearchResult, error) {
 	if offset <= 0 || limit <= 0 {
 		return nil, errors.New("offset or limit must greater than zero")
 	}
@@ -377,7 +388,7 @@ func (c *contact) Search(criteria Criteria, offset, limit uint16) (*SearchResult
 	data.Add("no-of-records", strconv.FormatUint(uint64(limit), 10))
 	data.Add("page-no", strconv.FormatUint(uint64(offset), 10))
 
-	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "search", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "contacts", "search", data)
 	if err != nil {
 		return nil, err
 	}
@@ -429,12 +440,12 @@ func (c *contact) Search(criteria Criteria, offset, limit uint16) (*SearchResult
 	}, nil
 }
 
-func (c *contact) Delete(contactID string) (*Action, error) {
+func (c *contact) Delete(ctx context.Context, contactID string) (*Action, error) {
 	if !core.RgxNumber.MatchString(contactID) {
 		return nil, core.ErrRcInvalidCredential
 	}
 
-	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "delete", url.Values{"contact-id": {contactID}})
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "contacts", "delete", url.Values{"contact-id": {contactID}})
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +472,7 @@ func (c *contact) Delete(contactID string) (*Action, error) {
 	return ret, nil
 }
 
-func (c *contact) Details(contactID string) (*Detail, error) {
+func (c *contact) Details(ctx context.Context, contactID string) (*Detail, error) {
 	if !core.RgxNumber.MatchString(contactID) {
 		return nil, core.ErrRcInvalidCredential
 	}
@@ -469,7 +480,7 @@ func (c *contact) Details(contactID string) (*Detail, error) {
 	data := url.Values{}
 	data.Add("contact-id", contactID)
 
-	resp, err := c.core.CallAPI(http.MethodGet, "contacts", "details", data)
+	resp, err := c.core.CallAPI(ctx, http.MethodGet, "contacts", "details", data)
 	if err != nil {
 		return nil, err
 	}
@@ -496,7 +507,7 @@ func (c *contact) Details(contactID string) (*Detail, error) {
 	return ret, nil
 }
 
-func (c *contact) Add(details *Detail, attributes core.EntityAttributes) error {
+func (c *contact) Add(ctx context.Context, details *Detail, attributes core.EntityAttributes) error {
 	if details == nil {
 		return errors.New("detail must not nil")
 	}
@@ -510,7 +521,7 @@ func (c *contact) Add(details *Detail, attributes core.EntityAttributes) error {
 		attributes.CopyTo(data)
 	}
 
-	resp, err := c.core.CallAPI(http.MethodPost, "contacts", "add", *data)
+	resp, err := c.core.CallAPI(ctx, http.MethodPost, "contacts", "add", *data)
 	if err != nil {
 		return err
 	}

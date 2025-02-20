@@ -2,6 +2,7 @@
 package domain
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -18,9 +19,10 @@ type domain struct {
 }
 
 type Domain interface {
-	CheckAvailability(domainsWithoutTLD, tlds []string) (Availabilities, error)
-	SuggestNames(keyword, tldOnly string, exactMatch, adult bool) (SuggestNames, error)
+	CheckAvailability(ctx context.Context, domainsWithoutTLD, tlds []string) (Availabilities, error)
+	SuggestNames(ctx context.Context, keyword, tldOnly string, exactMatch, adult bool) (SuggestNames, error)
 	Register(
+		ctx context.Context,
 		domainName string,
 		years int,
 		ns []string,
@@ -31,42 +33,49 @@ type Domain interface {
 		purchasePremiumDNS bool,
 	) (*RegisterResponse, error)
 	Transfer(
+		ctx context.Context,
 		domainName, authCode, customerID, regContactID, adminContactID, techContactID, billingContactID, invoiceOption string,
 		purchasePrivacy, protectPrivacy, autoRenew bool,
 		ns []string,
 		attrName, attrValue string,
 		purchasePremiumDNS bool,
 	) (*RegisterResponse, error)
-	ValidatingTransferRequest(domainName string) (bool, error)
-	GetCustomerDefaultNameServers(customerID string) ([]string, error)
-	GetOrderID(domainName string) (string, error)
-	GetRegistrationOrderDetails(orderID string, options []string) (*OrderDetail, error)
-	ModifyNameServers(orderID string, ns []string) (*NameServersResponse, error)
-	AddChildNameServer(orderID, cns string, ips []string) (*NameServersResponse, error)
-	ModifyChildNameServerHostName(orderID, oldCNS, newCNS string) (*NameServersResponse, error)
-	ModifyChildNameServerIPAddress(orderID, cns, oldIP, newIP string) (*NameServersResponse, error)
-	DeletingChildNameServerIPAddress(orderID, cns string, ips []string) (*NameServersResponse, error)
+	ValidatingTransferRequest(ctx context.Context, domainName string) (bool, error)
+	GetCustomerDefaultNameServers(ctx context.Context, customerID string) ([]string, error)
+	GetOrderID(ctx context.Context, domainName string) (string, error)
+	GetRegistrationOrderDetails(ctx context.Context, orderID string, options []string) (*OrderDetail, error)
+	ModifyNameServers(ctx context.Context, orderID string, ns []string) (*NameServersResponse, error)
+	AddChildNameServer(ctx context.Context, orderID, cns string, ips []string) (*NameServersResponse, error)
+	ModifyChildNameServerHostName(ctx context.Context, orderID, oldCNS, newCNS string) (*NameServersResponse, error)
+	ModifyChildNameServerIPAddress(ctx context.Context, orderID, cns, oldIP, newIP string) (*NameServersResponse, error)
+	DeletingChildNameServerIPAddress(ctx context.Context, orderID, cns string, ips []string) (*NameServersResponse, error)
 	ModifyContacts(
+		ctx context.Context,
 		orderID, regContactID, adminContactID, techContactID, billingContactID string,
 		sixtyDayLockOptout, designatedAgent bool,
 		attrName, attrValue string,
 	) (*ModifyAuthCodeResponse, error)
-	ModifyPrivacyProtectionStatus(orderID string, protectPrivacy bool, reason string) (*ModifyPrivacyProtectionStatusResponse, error)
-	ModifyAuthCode(orderID, authCode string) (*ModifyAuthCodeResponse, error)
-	ApplyTheftProtectionLock(orderID string) (*TheftProtectionLockResponse, error)
-	RemoveTheftProtectionLock(orderID string) (*TheftProtectionLockResponse, error)
-	GetTheListOfLocksAppliedOnDomainName(orderID string) (*GetTheListOfLocksAppliedOnDomainNameResponse, error)
-	CancelTransfer(orderID string) (*CancelTransferResponse, error)
-	Suspend(orderID, reason string) (*TheftProtectionLockResponse, error)
-	Unsuspend(orderID string) (*TheftProtectionLockResponse, error)
-	Delete(orderID string) (*DeleteResponse, error)
+	ModifyPrivacyProtectionStatus(
+		ctx context.Context,
+		orderID string,
+		protectPrivacy bool,
+		reason string,
+	) (*ModifyPrivacyProtectionStatusResponse, error)
+	ModifyAuthCode(ctx context.Context, orderID, authCode string) (*ModifyAuthCodeResponse, error)
+	ApplyTheftProtectionLock(ctx context.Context, orderID string) (*TheftProtectionLockResponse, error)
+	RemoveTheftProtectionLock(ctx context.Context, orderID string) (*TheftProtectionLockResponse, error)
+	GetTheListOfLocksAppliedOnDomainName(ctx context.Context, orderID string) (*GetTheListOfLocksAppliedOnDomainNameResponse, error)
+	CancelTransfer(ctx context.Context, orderID string) (*CancelTransferResponse, error)
+	Suspend(ctx context.Context, orderID, reason string) (*TheftProtectionLockResponse, error)
+	Unsuspend(ctx context.Context, orderID string) (*TheftProtectionLockResponse, error)
+	Delete(ctx context.Context, orderID string) (*DeleteResponse, error)
 }
 
 func New(c core.Core) Domain {
 	return &domain{c}
 }
 
-func (d *domain) CheckAvailability(domainName, tlds []string) (Availabilities, error) {
+func (d *domain) CheckAvailability(ctx context.Context, domainName, tlds []string) (Availabilities, error) {
 	if len(domainName) == 0 || len(tlds) == 0 {
 		return Availabilities{}, errors.New("domainnames and tlds must not empty")
 	}
@@ -75,7 +84,7 @@ func (d *domain) CheckAvailability(domainName, tlds []string) (Availabilities, e
 	data["domain-name"] = append(data["domain-name"], domainName...)
 	data["tlds"] = append(data["tlds"], tlds...)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domains", "available", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains", "available", data)
 	if err != nil {
 		return nil, err
 	}
@@ -102,14 +111,14 @@ func (d *domain) CheckAvailability(domainName, tlds []string) (Availabilities, e
 	return availabilities, nil
 }
 
-func (d *domain) SuggestNames(keyword, tldOnly string, exactMatch, adult bool) (SuggestNames, error) {
+func (d *domain) SuggestNames(ctx context.Context, keyword, tldOnly string, exactMatch, adult bool) (SuggestNames, error) {
 	data := make(url.Values)
 	data.Add("keyword", keyword)
 	data.Add("tld-only", tldOnly)
 	data.Add("exact-match", strconv.FormatBool(exactMatch))
 	data.Add("adult", strconv.FormatBool(adult))
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domains/v5", "suggest-names", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains/v5", "suggest-names", data)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +147,7 @@ func (d *domain) SuggestNames(keyword, tldOnly string, exactMatch, adult bool) (
 }
 
 func (d *domain) Register(
+	ctx context.Context,
 	domainName string,
 	years int,
 	ns []string,
@@ -165,7 +175,7 @@ func (d *domain) Register(
 	data.Add("discount-amount", strconv.FormatFloat(discountAmount, 'f', 2, 64))
 	data.Add("purchase-premium-dns", strconv.FormatBool(purchasePremiumDNS))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "register", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "register", data)
 	if err != nil {
 		return nil, err
 	}
@@ -193,6 +203,7 @@ func (d *domain) Register(
 }
 
 func (d *domain) Transfer(
+	ctx context.Context,
 	domainName, authCode, customerID, regContactID, adminContactID, techContactID, billingContactID, invoiceOption string,
 	purchasePrivacy, protectPrivacy, autoRenew bool,
 	ns []string,
@@ -216,7 +227,7 @@ func (d *domain) Transfer(
 	data.Add("attr-value", attrValue)
 	data.Add("purchase-premium-dns", strconv.FormatBool(purchasePremiumDNS))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "transfer", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "transfer", data)
 	if err != nil {
 		return nil, err
 	}
@@ -243,11 +254,11 @@ func (d *domain) Transfer(
 	return &result, nil
 }
 
-func (d *domain) ValidatingTransferRequest(domainName string) (bool, error) {
+func (d *domain) ValidatingTransferRequest(ctx context.Context, domainName string) (bool, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "validate-transfer", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "validate-transfer", data)
 	if err != nil {
 		return false, err
 	}
@@ -275,6 +286,7 @@ func (d *domain) ValidatingTransferRequest(domainName string) (bool, error) {
 }
 
 func (d *domain) Renew(
+	ctx context.Context,
 	orderID string,
 	_, expDate int, // years & expDate
 	purchasePrivacy, autoRenew bool,
@@ -291,7 +303,7 @@ func (d *domain) Renew(
 	data.Add("discount-amount", strconv.FormatFloat(discountAmount, 'f', 2, 64))
 	data.Add("purchase-premium-dns", strconv.FormatBool(purchasePremiumDNS))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "renew", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "renew", data)
 	if err != nil {
 		return err
 	}
@@ -313,12 +325,12 @@ func (d *domain) Renew(
 	return nil
 }
 
-func (d *domain) SearchOrders(criteria OrderCriteria) error {
+func (d *domain) SearchOrders(ctx context.Context, criteria OrderCriteria) error {
 	urlValues, err := criteria.URLValues()
 	if err != nil {
 		return err
 	}
-	resp, err := d.core.CallAPI(http.MethodGet, "domains", "search", urlValues)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains", "search", urlValues)
 	if err != nil {
 		return err
 	}
@@ -340,11 +352,11 @@ func (d *domain) SearchOrders(criteria OrderCriteria) error {
 	return nil
 }
 
-func (d *domain) GetCustomerDefaultNameServers(customerID string) ([]string, error) {
+func (d *domain) GetCustomerDefaultNameServers(ctx context.Context, customerID string) ([]string, error) {
 	data := make(url.Values)
 	data.Add("customer-id", customerID)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domains", "customer-default-ns", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains", "customer-default-ns", data)
 	if err != nil {
 		return nil, err
 	}
@@ -371,11 +383,11 @@ func (d *domain) GetCustomerDefaultNameServers(customerID string) ([]string, err
 	return result, nil
 }
 
-func (d *domain) GetOrderID(domainName string) (string, error) {
+func (d *domain) GetOrderID(ctx context.Context, domainName string) (string, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domains", "orderid", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains", "orderid", data)
 	if err != nil {
 		return "", err
 	}
@@ -397,12 +409,12 @@ func (d *domain) GetOrderID(domainName string) (string, error) {
 	return string(bytesResp), nil
 }
 
-func (d *domain) GetRegistrationOrderDetails(orderID string, options []string) (*OrderDetail, error) {
+func (d *domain) GetRegistrationOrderDetails(ctx context.Context, orderID string, options []string) (*OrderDetail, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data["options"] = append(data["options"], options...)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domains", "details", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains", "details", data)
 	if err != nil {
 		return nil, err
 	}
@@ -429,12 +441,12 @@ func (d *domain) GetRegistrationOrderDetails(orderID string, options []string) (
 	return &orderDetail, nil
 }
 
-func (d *domain) ModifyNameServers(orderID string, ns []string) (*NameServersResponse, error) {
+func (d *domain) ModifyNameServers(ctx context.Context, orderID string, ns []string) (*NameServersResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data["ns"] = append(data["ns"], ns...)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "modify-ns", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "modify-ns", data)
 	if err != nil {
 		return nil, err
 	}
@@ -461,13 +473,13 @@ func (d *domain) ModifyNameServers(orderID string, ns []string) (*NameServersRes
 	return &result, nil
 }
 
-func (d *domain) AddChildNameServer(orderID, cns string, ips []string) (*NameServersResponse, error) {
+func (d *domain) AddChildNameServer(ctx context.Context, orderID, cns string, ips []string) (*NameServersResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("cns", cns)
 	data["ip"] = append(data["ip"], ips...)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "add-cns", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "add-cns", data)
 	if err != nil {
 		return nil, err
 	}
@@ -494,13 +506,13 @@ func (d *domain) AddChildNameServer(orderID, cns string, ips []string) (*NameSer
 	return &result, nil
 }
 
-func (d *domain) ModifyChildNameServerHostName(orderID, oldCNS, newCNS string) (*NameServersResponse, error) {
+func (d *domain) ModifyChildNameServerHostName(ctx context.Context, orderID, oldCNS, newCNS string) (*NameServersResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("old-cns", oldCNS)
 	data.Add("new-cns", newCNS)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "modify-cns-name", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "modify-cns-name", data)
 	if err != nil {
 		return nil, err
 	}
@@ -527,14 +539,14 @@ func (d *domain) ModifyChildNameServerHostName(orderID, oldCNS, newCNS string) (
 	return &result, nil
 }
 
-func (d *domain) ModifyChildNameServerIPAddress(orderID, cns, oldIP, newIP string) (*NameServersResponse, error) {
+func (d *domain) ModifyChildNameServerIPAddress(ctx context.Context, orderID, cns, oldIP, newIP string) (*NameServersResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("cns", cns)
 	data.Add("old-ip", oldIP)
 	data.Add("new-ip", newIP)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "modify-cns-ip", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "modify-cns-ip", data)
 	if err != nil {
 		return nil, err
 	}
@@ -561,13 +573,13 @@ func (d *domain) ModifyChildNameServerIPAddress(orderID, cns, oldIP, newIP strin
 	return &result, nil
 }
 
-func (d *domain) DeletingChildNameServerIPAddress(orderID, cns string, ips []string) (*NameServersResponse, error) {
+func (d *domain) DeletingChildNameServerIPAddress(ctx context.Context, orderID, cns string, ips []string) (*NameServersResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("cns", cns)
 	data["ip"] = append(data["ip"], ips...)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "delete-cns-ip", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "delete-cns-ip", data)
 	if err != nil {
 		return nil, err
 	}
@@ -595,6 +607,7 @@ func (d *domain) DeletingChildNameServerIPAddress(orderID, cns string, ips []str
 }
 
 func (d *domain) ModifyContacts(
+	ctx context.Context,
 	orderID, regContactID, adminContactID, techContactID, billingContactID string,
 	sixtyDayLockOptout, designatedAgent bool,
 	attrName, attrValue string,
@@ -610,7 +623,7 @@ func (d *domain) ModifyContacts(
 	data.Add("attr-name", attrName)
 	data.Add("attr-value", attrValue)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "modify-contact", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "modify-contact", data)
 	if err != nil {
 		return nil, err
 	}
@@ -638,6 +651,7 @@ func (d *domain) ModifyContacts(
 }
 
 func (d *domain) ModifyPrivacyProtectionStatus(
+	ctx context.Context,
 	orderID string,
 	protectPrivacy bool,
 	reason string,
@@ -647,7 +661,7 @@ func (d *domain) ModifyPrivacyProtectionStatus(
 	data.Add("protect-privacy", strconv.FormatBool(protectPrivacy))
 	data.Add("reason", reason)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "modify-privacy-protection", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "modify-privacy-protection", data)
 	if err != nil {
 		return nil, err
 	}
@@ -674,12 +688,12 @@ func (d *domain) ModifyPrivacyProtectionStatus(
 	return &result, nil
 }
 
-func (d *domain) ModifyAuthCode(orderID, authCode string) (*ModifyAuthCodeResponse, error) {
+func (d *domain) ModifyAuthCode(ctx context.Context, orderID, authCode string) (*ModifyAuthCodeResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("auth-code", authCode)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "modify-auth-code", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "modify-auth-code", data)
 	if err != nil {
 		return nil, err
 	}
@@ -706,11 +720,11 @@ func (d *domain) ModifyAuthCode(orderID, authCode string) (*ModifyAuthCodeRespon
 	return &result, nil
 }
 
-func (d *domain) ApplyTheftProtectionLock(orderID string) (*TheftProtectionLockResponse, error) {
+func (d *domain) ApplyTheftProtectionLock(ctx context.Context, orderID string) (*TheftProtectionLockResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "enable-theft-protection", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "enable-theft-protection", data)
 	if err != nil {
 		return nil, err
 	}
@@ -737,11 +751,11 @@ func (d *domain) ApplyTheftProtectionLock(orderID string) (*TheftProtectionLockR
 	return &result, nil
 }
 
-func (d *domain) RemoveTheftProtectionLock(orderID string) (*TheftProtectionLockResponse, error) {
+func (d *domain) RemoveTheftProtectionLock(ctx context.Context, orderID string) (*TheftProtectionLockResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "disable-theft-protection", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "disable-theft-protection", data)
 	if err != nil {
 		return nil, err
 	}
@@ -768,11 +782,14 @@ func (d *domain) RemoveTheftProtectionLock(orderID string) (*TheftProtectionLock
 	return &result, nil
 }
 
-func (d *domain) GetTheListOfLocksAppliedOnDomainName(orderID string) (*GetTheListOfLocksAppliedOnDomainNameResponse, error) {
+func (d *domain) GetTheListOfLocksAppliedOnDomainName(
+	ctx context.Context,
+	orderID string,
+) (*GetTheListOfLocksAppliedOnDomainNameResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domains", "locks", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domains", "locks", data)
 	if err != nil {
 		return nil, err
 	}
@@ -799,13 +816,13 @@ func (d *domain) GetTheListOfLocksAppliedOnDomainName(orderID string) (*GetTheLi
 	return &result, nil
 }
 
-func (d *domain) ModifyTELWhoisPreference(orderID, whoisType, publish string) error {
+func (d *domain) ModifyTELWhoisPreference(ctx context.Context, orderID, whoisType, publish string) error {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("whois-type", whoisType)
 	data.Add("publish", publish)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "tel/modify-whois-pref", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "tel/modify-whois-pref", data)
 	if err != nil {
 		return err
 	}
@@ -827,11 +844,11 @@ func (d *domain) ModifyTELWhoisPreference(orderID, whoisType, publish string) er
 	return nil
 }
 
-func (d *domain) ResendTransferApprovalMail(orderID string) error {
+func (d *domain) ResendTransferApprovalMail(ctx context.Context, orderID string) error {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "resend-rfa", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "resend-rfa", data)
 	if err != nil {
 		return err
 	}
@@ -853,12 +870,12 @@ func (d *domain) ResendTransferApprovalMail(orderID string) error {
 	return nil
 }
 
-func (d *domain) ReleaseUKDomainName(orderID, newTag string) error {
+func (d *domain) ReleaseUKDomainName(ctx context.Context, orderID, newTag string) error {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("new-tag", newTag)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "uk/release", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "uk/release", data)
 	if err != nil {
 		return err
 	}
@@ -880,11 +897,11 @@ func (d *domain) ReleaseUKDomainName(orderID, newTag string) error {
 	return nil
 }
 
-func (d *domain) CancelTransfer(orderID string) (*CancelTransferResponse, error) {
+func (d *domain) CancelTransfer(ctx context.Context, orderID string) (*CancelTransferResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "cancel-transfer", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "cancel-transfer", data)
 	if err != nil {
 		return nil, err
 	}
@@ -911,12 +928,12 @@ func (d *domain) CancelTransfer(orderID string) (*CancelTransferResponse, error)
 	return &result, nil
 }
 
-func (d *domain) Suspend(orderID, reason string) (*TheftProtectionLockResponse, error) {
+func (d *domain) Suspend(ctx context.Context, orderID, reason string) (*TheftProtectionLockResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("reason", reason)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "orders", "suspend", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "orders", "suspend", data)
 	if err != nil {
 		return nil, err
 	}
@@ -943,11 +960,11 @@ func (d *domain) Suspend(orderID, reason string) (*TheftProtectionLockResponse, 
 	return &result, nil
 }
 
-func (d *domain) Unsuspend(orderID string) (*TheftProtectionLockResponse, error) {
+func (d *domain) Unsuspend(ctx context.Context, orderID string) (*TheftProtectionLockResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "orders", "unsuspend", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "orders", "unsuspend", data)
 	if err != nil {
 		return nil, err
 	}
@@ -974,11 +991,11 @@ func (d *domain) Unsuspend(orderID string) (*TheftProtectionLockResponse, error)
 	return &result, nil
 }
 
-func (d *domain) Delete(orderID string) (*DeleteResponse, error) {
+func (d *domain) Delete(ctx context.Context, orderID string) (*DeleteResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "delete", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "delete", data)
 	if err != nil {
 		return nil, err
 	}
@@ -1005,12 +1022,12 @@ func (d *domain) Delete(orderID string) (*DeleteResponse, error) {
 	return &result, nil
 }
 
-func (d *domain) Restore(orderID, invoiceOption string) error {
+func (d *domain) Restore(ctx context.Context, orderID, invoiceOption string) error {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("invoice-option", invoiceOption)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "restore", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "restore", data)
 	if err != nil {
 		return err
 	}
@@ -1032,11 +1049,11 @@ func (d *domain) Restore(orderID, invoiceOption string) error {
 	return nil
 }
 
-func (d *domain) RecheckingNSWithDERegistry(orderID string) error {
+func (d *domain) RecheckingNSWithDERegistry(ctx context.Context, orderID string) error {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "de/recheck-ns", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "de/recheck-ns", data)
 	if err != nil {
 		return err
 	}
@@ -1058,12 +1075,12 @@ func (d *domain) RecheckingNSWithDERegistry(orderID string) error {
 	return nil
 }
 
-func (d *domain) AssociatingOrDissociatingXXXMembershipTokenID(orderID, associationID string) error {
+func (d *domain) AssociatingOrDissociatingXXXMembershipTokenID(ctx context.Context, orderID, associationID string) error {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("association-id", associationID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domains", "dotxxx/association-details", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domains", "dotxxx/association-details", data)
 	if err != nil {
 		return err
 	}

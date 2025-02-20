@@ -1,6 +1,7 @@
 package general
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -278,8 +279,8 @@ const (
 	CountryPortugal                         CountryISO = "PT"
 )
 
-func fetchCountryDB(c core.Core) (countryDB, error) {
-	resp, err := c.CallAPI(http.MethodGet, "country", "list", url.Values{})
+func fetchCountryDB(ctx context.Context, c core.Core) (countryDB, error) {
+	resp, err := c.CallAPI(ctx, http.MethodGet, "country", "list", url.Values{})
 	if err != nil {
 		return nil, err
 	}

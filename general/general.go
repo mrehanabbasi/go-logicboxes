@@ -2,6 +2,8 @@
 package general
 
 import (
+	"context"
+
 	"github.com/mrehanabbasi/go-logicboxes/core"
 )
 
@@ -14,7 +16,7 @@ type general struct {
 type General interface {
 	CurrencyOf(iso CurrencyISO) Currency
 	CountryName(iso CountryISO) string
-	StatesOf(iso CountryISO) (States, error)
+	StatesOf(ctx context.Context, iso CountryISO) (States, error)
 }
 
 func (g *general) CountryName(iso CountryISO) string {
@@ -25,16 +27,16 @@ func (g *general) CurrencyOf(iso CurrencyISO) Currency {
 	return g.currencies[iso]
 }
 
-func (g *general) StatesOf(iso CountryISO) (States, error) {
-	return fetchStateList(g.core, iso)
+func (g *general) StatesOf(ctx context.Context, iso CountryISO) (States, error) {
+	return fetchStateList(ctx, g.core, iso)
 }
 
-func New(c core.Core) (General, error) {
-	curr, err := fetchCurrencyDB(c)
+func New(ctx context.Context, c core.Core) (General, error) {
+	curr, err := fetchCurrencyDB(ctx, c)
 	if err != nil {
 		return nil, err
 	}
-	cntrs, err := fetchCountryDB(c)
+	cntrs, err := fetchCountryDB(ctx, c)
 	if err != nil {
 		return nil, err
 	}

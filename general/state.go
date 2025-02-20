@@ -1,6 +1,7 @@
 package general
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -20,11 +21,11 @@ type States interface {
 	ToMap() map[string]string
 }
 
-func fetchStateList(c core.Core, cc CountryISO) (States, error) {
+func fetchStateList(ctx context.Context, c core.Core, cc CountryISO) (States, error) {
 	data := url.Values{}
 	data.Add("country-code", string(cc))
 
-	resp, err := c.CallAPI(http.MethodGet, "country", "state-list", data)
+	resp, err := c.CallAPI(ctx, http.MethodGet, "country", "state-list", data)
 	if err != nil {
 		return nil, err
 	}

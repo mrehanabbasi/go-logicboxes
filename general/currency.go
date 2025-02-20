@@ -1,6 +1,7 @@
 package general
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -183,8 +184,8 @@ const (
 	IsoBMD CurrencyISO = "BMD"
 )
 
-func fetchCurrencyDB(c core.Core) (currencyDB, error) {
-	resp, err := c.CallAPI(http.MethodGet, "currency", "details", url.Values{})
+func fetchCurrencyDB(ctx context.Context, c core.Core) (currencyDB, error) {
+	resp, err := c.CallAPI(ctx, http.MethodGet, "currency", "details", url.Values{})
 	if err != nil {
 		return nil, err
 	}

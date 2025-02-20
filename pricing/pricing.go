@@ -2,6 +2,7 @@
 package pricing
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -13,10 +14,10 @@ import (
 )
 
 type Pricing interface {
-	GettingCustomerPricing(customerID string) (CustomerPrice, error)
-	GettingResellerPricing(resellerID string) (ResellerPrice, error)
-	GettingResellerCostPricing(resellerID string) (ResellerCostPrice, error)
-	GettingPromoPrices() (PromoPrice, error)
+	GettingCustomerPricing(ctx context.Context, customerID string) (CustomerPrice, error)
+	GettingResellerPricing(ctx context.Context, resellerID string) (ResellerPrice, error)
+	GettingResellerCostPricing(ctx context.Context, resellerID string) (ResellerCostPrice, error)
+	GettingPromoPrices(ctx context.Context) (PromoPrice, error)
 }
 
 func New(c core.Core) Pricing {
@@ -27,11 +28,11 @@ type pricing struct {
 	core core.Core
 }
 
-func (p *pricing) GettingCustomerPricing(customerID string) (CustomerPrice, error) {
+func (p *pricing) GettingCustomerPricing(ctx context.Context, customerID string) (CustomerPrice, error) {
 	data := make(url.Values)
 	data.Add("customer-id", customerID)
 
-	resp, err := p.core.CallAPI(http.MethodGet, "products", "customer-price", data)
+	resp, err := p.core.CallAPI(ctx, http.MethodGet, "products", "customer-price", data)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +59,11 @@ func (p *pricing) GettingCustomerPricing(customerID string) (CustomerPrice, erro
 	return result, nil
 }
 
-func (p *pricing) GettingResellerPricing(resellerID string) (ResellerPrice, error) {
+func (p *pricing) GettingResellerPricing(ctx context.Context, resellerID string) (ResellerPrice, error) {
 	data := make(url.Values)
 	data.Add("reseller-id", resellerID)
 
-	resp, err := p.core.CallAPI(http.MethodGet, "products", "reseller-price", data)
+	resp, err := p.core.CallAPI(ctx, http.MethodGet, "products", "reseller-price", data)
 	if err != nil {
 		return nil, err
 	}
@@ -89,11 +90,11 @@ func (p *pricing) GettingResellerPricing(resellerID string) (ResellerPrice, erro
 	return result, nil
 }
 
-func (p *pricing) GettingResellerCostPricing(resellerID string) (ResellerCostPrice, error) {
+func (p *pricing) GettingResellerCostPricing(ctx context.Context, resellerID string) (ResellerCostPrice, error) {
 	data := make(url.Values)
 	data.Add("reseller-id", resellerID)
 
-	resp, err := p.core.CallAPI(http.MethodGet, "products", "reseller-cost-price", data)
+	resp, err := p.core.CallAPI(ctx, http.MethodGet, "products", "reseller-cost-price", data)
 	if err != nil {
 		return nil, err
 	}
@@ -120,10 +121,10 @@ func (p *pricing) GettingResellerCostPricing(resellerID string) (ResellerCostPri
 	return result, nil
 }
 
-func (p *pricing) GettingPromoPrices() (PromoPrice, error) {
+func (p *pricing) GettingPromoPrices(ctx context.Context) (PromoPrice, error) {
 	data := make(url.Values)
 
-	resp, err := p.core.CallAPI(http.MethodGet, "products", "promo-details", data)
+	resp, err := p.core.CallAPI(ctx, http.MethodGet, "products", "promo-details", data)
 	if err != nil {
 		return nil, err
 	}

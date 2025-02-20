@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"testing"
@@ -23,59 +24,59 @@ var (
 )
 
 func TestSuggestNames(t *testing.T) {
-	res, err := d.SuggestNames("domain", "", false, false)
+	res, err := d.SuggestNames(context.Background(), "domain", "", false, false)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestGetOrderID(t *testing.T) {
-	res, err := d.GetOrderID(domainName)
+	res, err := d.GetOrderID(context.Background(), domainName)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestGetRegistrationOrderDetails(t *testing.T) {
-	res, err := d.GetRegistrationOrderDetails(orderID, []string{"All"})
+	res, err := d.GetRegistrationOrderDetails(context.Background(), orderID, []string{"All"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestModifyNameServers(t *testing.T) {
-	res, err := d.ModifyNameServers(orderID, []string{"ns1.domain.asia"})
+	res, err := d.ModifyNameServers(context.Background(), orderID, []string{"ns1.domain.asia"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	res, err = d.ModifyNameServers(orderID, []string{"ns2.domain.asia"})
+	res, err = d.ModifyNameServers(context.Background(), orderID, []string{"ns2.domain.asia"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestAddChildNameServer(t *testing.T) {
-	res, err := d.AddChildNameServer(orderID, "new."+domainName, []string{"0.0.0.0", "1.1.1.1"})
+	res, err := d.AddChildNameServer(context.Background(), orderID, "new."+domainName, []string{"0.0.0.0", "1.1.1.1"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestModifyPrivacyProtectionStatus(t *testing.T) {
-	res, err := d.ModifyPrivacyProtectionStatus(orderID, true, "some reason")
+	res, err := d.ModifyPrivacyProtectionStatus(context.Background(), orderID, true, "some reason")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestModifyAuthCode(t *testing.T) {
-	res, err := d.ModifyAuthCode(orderID, authCode)
+	res, err := d.ModifyAuthCode(context.Background(), orderID, authCode)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestApplyTheftProtectionLock(t *testing.T) {
-	res, err := d.ApplyTheftProtectionLock(orderID)
+	res, err := d.ApplyTheftProtectionLock(context.Background(), orderID)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestGetTheListOfLocksAppliedOnDomainName(t *testing.T) {
-	res, err := d.GetTheListOfLocksAppliedOnDomainName(orderID)
+	res, err := d.GetTheListOfLocksAppliedOnDomainName(context.Background(), orderID)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }

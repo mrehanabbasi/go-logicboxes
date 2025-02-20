@@ -2,6 +2,7 @@
 package domainforward
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -15,21 +16,23 @@ import (
 
 type DomainForward interface {
 	ActivatingDomainForwardingService(
+		ctx context.Context,
 		orderID, subDomainPrefix, forwardTo string,
 		urlMasking bool,
 		metaTags, noframes string,
 		subDomainForwarding, pathForwarding bool,
 	) (*StdResponse, error)
-	GettingDetailsDomainForwardingService(orderID string, includeSubdomain bool) (*DetailsDomainForward, error)
+	GettingDetailsDomainForwardingService(ctx context.Context, orderID string, includeSubdomain bool) (*DetailsDomainForward, error)
 	ManagingDomainForwardingService(
+		ctx context.Context,
 		orderID, subDomainPrefix, forwardTo string,
 		urlMasking bool,
 		metaTags, noframes string,
 		subDomainForwarding, pathForwarding bool,
 	) (*StdResponse, error)
-	GettingDNSRecords(domainName string) ([]*DNSRecord, error)
-	RemoveDomainForwardingForDomain(domainName string) (bool, error)
-	DisableDomainForwardingForSubDomain(orderID, subDomainPrefix string) (bool, error)
+	GettingDNSRecords(ctx context.Context, domainName string) ([]*DNSRecord, error)
+	RemoveDomainForwardingForDomain(ctx context.Context, domainName string) (bool, error)
+	DisableDomainForwardingForSubDomain(ctx context.Context, orderID, subDomainPrefix string) (bool, error)
 }
 
 func New(c core.Core) DomainForward {
@@ -41,6 +44,7 @@ type domainForward struct {
 }
 
 func (d *domainForward) ActivatingDomainForwardingService(
+	ctx context.Context,
 	orderID, subDomainPrefix, forwardTo string,
 	urlMasking bool,
 	metaTags, noframes string,
@@ -56,7 +60,7 @@ func (d *domainForward) ActivatingDomainForwardingService(
 	data.Add("sub-domain-forwarding", strconv.FormatBool(subDomainForwarding))
 	data.Add("path-forwarding", strconv.FormatBool(pathForwarding))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "activate", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domainforward", "activate", data)
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +87,16 @@ func (d *domainForward) ActivatingDomainForwardingService(
 	return &result, nil
 }
 
-func (d *domainForward) GettingDetailsDomainForwardingService(orderID string, includeSubdomain bool) (*DetailsDomainForward, error) {
+func (d *domainForward) GettingDetailsDomainForwardingService(
+	ctx context.Context,
+	orderID string,
+	includeSubdomain bool,
+) (*DetailsDomainForward, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("include-subdomain", strconv.FormatBool(includeSubdomain))
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domainforward", "details", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domainforward", "details", data)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +124,7 @@ func (d *domainForward) GettingDetailsDomainForwardingService(orderID string, in
 }
 
 func (d *domainForward) ManagingDomainForwardingService(
+	ctx context.Context,
 	orderID, subDomainPrefix, forwardTo string,
 	urlMasking bool,
 	metaTags, noframes string,
@@ -131,7 +140,7 @@ func (d *domainForward) ManagingDomainForwardingService(
 	data.Add("sub-domain-forwarding", strconv.FormatBool(subDomainForwarding))
 	data.Add("path-forwarding", strconv.FormatBool(pathForwarding))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "manage", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domainforward", "manage", data)
 	if err != nil {
 		return nil, err
 	}
@@ -158,11 +167,11 @@ func (d *domainForward) ManagingDomainForwardingService(
 	return &result, nil
 }
 
-func (d *domainForward) GettingDNSRecords(domainName string) ([]*DNSRecord, error) {
+func (d *domainForward) GettingDNSRecords(ctx context.Context, domainName string) ([]*DNSRecord, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "domainforward", "dns-records", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "domainforward", "dns-records", data)
 	if err != nil {
 		return nil, err
 	}
@@ -189,11 +198,11 @@ func (d *domainForward) GettingDNSRecords(domainName string) ([]*DNSRecord, erro
 	return result, nil
 }
 
-func (d *domainForward) RemoveDomainForwardingForDomain(domainName string) (bool, error) {
+func (d *domainForward) RemoveDomainForwardingForDomain(ctx context.Context, domainName string) (bool, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "delete", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domainforward", "delete", data)
 	if err != nil {
 		return false, err
 	}
@@ -220,12 +229,12 @@ func (d *domainForward) RemoveDomainForwardingForDomain(domainName string) (bool
 	return result, nil
 }
 
-func (d *domainForward) DisableDomainForwardingForSubDomain(orderID, subDomainPrefix string) (bool, error) {
+func (d *domainForward) DisableDomainForwardingForSubDomain(ctx context.Context, orderID, subDomainPrefix string) (bool, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 	data.Add("sub-domain-prefix", subDomainPrefix)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "domainforward", "sub-domain-record/delete", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "domainforward", "sub-domain-record/delete", data)
 	if err != nil {
 		return false, err
 	}

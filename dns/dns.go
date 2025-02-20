@@ -2,6 +2,7 @@
 package dns
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,31 +16,41 @@ import (
 )
 
 type DNS interface {
-	ActivatingDNSService(orderID string) (*ActivatingDNSServiceResponse, error)
-	AddingIPv4AddressRecord(domainName, value, host string, ttl int) (*StdResponse, error)
-	AddingIPv6AddressRecord(domainName, value, host string, ttl int) (*StdResponse, error)
-	AddingCNAMERecord(domainName, value, host string, ttl int) (*StdResponse, error)
-	AddingMXRecord(domainName, value, host string, ttl, priority int) (*StdResponse, error)
-	AddingNSRecord(domainName, value, host string, ttl int) (*StdResponse, error)
-	AddingTXTRecord(domainName, value, host string, ttl int) (*StdResponse, error)
-	AddingSRVRecord(domainName, value, host string, ttl, priority, port, weight int) (*StdResponse, error)
-	ModifyingIPv4AddressRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
-	ModifyingIPv6AddressRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
-	ModifyingCNAMERecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
-	ModifyingMXRecord(domainName, host, currentValue, newValue string, ttl, priority int) (*StdResponse, error)
-	ModifyingNSRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
-	ModifyingTXTRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
-	ModifyingSRVRecord(domainName, host, currentValue, newValue string, ttl, priority, port, weight int) (*StdResponse, error)
-	ModifyingSOARecord(domainName, responsiblePerson string, refresh, retry, expire, ttl int) (*StdResponse, error)
-	SearchingDNSRecords(domainName string, typeRecord RecordType, noOfRecords, pageNo int, host, value string) (*SearchingDNSRecords, error)
-	DeletingDNSRecord(host, value string) (*StdResponse, error)
-	DeletingIPv4AddressRecord(domainName, host, value string) (*StdResponse, error)
-	DeletingIPv6AddressRecord(domainName, host, value string) (*StdResponse, error)
-	DeletingCNAMERecord(domainName, host, value string) (*StdResponse, error)
-	DeletingMXRecord(domainName, host, value string) (*StdResponse, error)
-	DeletingNSRecord(domainName, host, value string) (*StdResponse, error)
-	DeletingTXTRecord(domainName, host, value string) (*StdResponse, error)
-	DeletingSRVRecord(domainName, host, value string, port, weight int) (*StdResponse, error)
+	ActivatingDNSService(ctx context.Context, orderID string) (*ActivatingDNSServiceResponse, error)
+	AddingIPv4AddressRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error)
+	AddingIPv6AddressRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error)
+	AddingCNAMERecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error)
+	AddingMXRecord(ctx context.Context, domainName, value, host string, ttl, priority int) (*StdResponse, error)
+	AddingNSRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error)
+	AddingTXTRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error)
+	AddingSRVRecord(ctx context.Context, domainName, value, host string, ttl, priority, port, weight int) (*StdResponse, error)
+	ModifyingIPv4AddressRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
+	ModifyingIPv6AddressRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
+	ModifyingCNAMERecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
+	ModifyingMXRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl, priority int) (*StdResponse, error)
+	ModifyingNSRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
+	ModifyingTXTRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error)
+	ModifyingSRVRecord(
+		ctx context.Context,
+		domainName, host, currentValue, newValue string,
+		ttl, priority, port, weight int,
+	) (*StdResponse, error)
+	ModifyingSOARecord(ctx context.Context, domainName, responsiblePerson string, refresh, retry, expire, ttl int) (*StdResponse, error)
+	SearchingDNSRecords(
+		ctx context.Context,
+		domainName string,
+		typeRecord RecordType,
+		noOfRecords, pageNo int,
+		host, value string,
+	) (*SearchingDNSRecords, error)
+	DeletingDNSRecord(ctx context.Context, host, value string) (*StdResponse, error)
+	DeletingIPv4AddressRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error)
+	DeletingIPv6AddressRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error)
+	DeletingCNAMERecord(ctx context.Context, domainName, host, value string) (*StdResponse, error)
+	DeletingMXRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error)
+	DeletingNSRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error)
+	DeletingTXTRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error)
+	DeletingSRVRecord(ctx context.Context, domainName, host, value string, port, weight int) (*StdResponse, error)
 }
 
 func New(c core.Core) DNS {
@@ -50,11 +61,11 @@ type dns struct {
 	core core.Core
 }
 
-func (d *dns) ActivatingDNSService(orderID string) (*ActivatingDNSServiceResponse, error) {
+func (d *dns) ActivatingDNSService(ctx context.Context, orderID string) (*ActivatingDNSServiceResponse, error) {
 	data := make(url.Values)
 	data.Add("order-id", orderID)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "activate", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "activate", data)
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +92,14 @@ func (d *dns) ActivatingDNSService(orderID string) (*ActivatingDNSServiceRespons
 	return &result, nil
 }
 
-func (d *dns) AddingIPv4AddressRecord(domainName, value, host string, ttl int) (*StdResponse, error) {
+func (d *dns) AddingIPv4AddressRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-ipv4-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/add-ipv4-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -115,14 +126,14 @@ func (d *dns) AddingIPv4AddressRecord(domainName, value, host string, ttl int) (
 	return &result, nil
 }
 
-func (d *dns) AddingIPv6AddressRecord(domainName, value, host string, ttl int) (*StdResponse, error) {
+func (d *dns) AddingIPv6AddressRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-ipv6-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/add-ipv6-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -149,14 +160,14 @@ func (d *dns) AddingIPv6AddressRecord(domainName, value, host string, ttl int) (
 	return &result, nil
 }
 
-func (d *dns) AddingCNAMERecord(domainName, value, host string, ttl int) (*StdResponse, error) {
+func (d *dns) AddingCNAMERecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-cname-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/add-cname-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +194,7 @@ func (d *dns) AddingCNAMERecord(domainName, value, host string, ttl int) (*StdRe
 	return &result, nil
 }
 
-func (d *dns) AddingMXRecord(domainName, value, host string, ttl, priority int) (*StdResponse, error) {
+func (d *dns) AddingMXRecord(ctx context.Context, domainName, value, host string, ttl, priority int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
@@ -191,7 +202,7 @@ func (d *dns) AddingMXRecord(domainName, value, host string, ttl, priority int) 
 	data.Add("ttl", strconv.Itoa(ttl))
 	data.Add("priority", strconv.Itoa(priority))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-mx-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/add-mx-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -218,14 +229,14 @@ func (d *dns) AddingMXRecord(domainName, value, host string, ttl, priority int) 
 	return &result, nil
 }
 
-func (d *dns) AddingNSRecord(domainName, value, host string, ttl int) (*StdResponse, error) {
+func (d *dns) AddingNSRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-ns-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/add-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -253,14 +264,14 @@ func (d *dns) AddingNSRecord(domainName, value, host string, ttl int) (*StdRespo
 	return &result, nil
 }
 
-func (d *dns) AddingTXTRecord(domainName, value, host string, ttl int) (*StdResponse, error) {
+func (d *dns) AddingTXTRecord(ctx context.Context, domainName, value, host string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
 	data.Add("host", host)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/manage/add-ns-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/manage/add-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +298,7 @@ func (d *dns) AddingTXTRecord(domainName, value, host string, ttl int) (*StdResp
 	return &result, nil
 }
 
-func (d *dns) AddingSRVRecord(domainName, value, host string, ttl, priority, port, weight int) (*StdResponse, error) {
+func (d *dns) AddingSRVRecord(ctx context.Context, domainName, value, host string, ttl, priority, port, weight int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("value", value)
@@ -297,7 +308,7 @@ func (d *dns) AddingSRVRecord(domainName, value, host string, ttl, priority, por
 	data.Add("port", strconv.Itoa(port))
 	data.Add("weight", strconv.Itoa(weight))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/add-srv-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/add-srv-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +335,11 @@ func (d *dns) AddingSRVRecord(domainName, value, host string, ttl, priority, por
 	return &result, nil
 }
 
-func (d *dns) ModifyingIPv4AddressRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
+func (d *dns) ModifyingIPv4AddressRecord(
+	ctx context.Context,
+	domainName, host, currentValue, newValue string,
+	ttl int,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -332,7 +347,7 @@ func (d *dns) ModifyingIPv4AddressRecord(domainName, host, currentValue, newValu
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-ipv4-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-ipv4-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +374,11 @@ func (d *dns) ModifyingIPv4AddressRecord(domainName, host, currentValue, newValu
 	return &result, nil
 }
 
-func (d *dns) ModifyingIPv6AddressRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
+func (d *dns) ModifyingIPv6AddressRecord(
+	ctx context.Context,
+	domainName, host, currentValue, newValue string,
+	ttl int,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -367,7 +386,7 @@ func (d *dns) ModifyingIPv6AddressRecord(domainName, host, currentValue, newValu
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-ipv6-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-ipv6-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +413,7 @@ func (d *dns) ModifyingIPv6AddressRecord(domainName, host, currentValue, newValu
 	return &result, nil
 }
 
-func (d *dns) ModifyingCNAMERecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
+func (d *dns) ModifyingCNAMERecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -402,7 +421,7 @@ func (d *dns) ModifyingCNAMERecord(domainName, host, currentValue, newValue stri
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-cname-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-cname-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +448,11 @@ func (d *dns) ModifyingCNAMERecord(domainName, host, currentValue, newValue stri
 	return &result, nil
 }
 
-func (d *dns) ModifyingMXRecord(domainName, host, currentValue, newValue string, ttl, priority int) (*StdResponse, error) {
+func (d *dns) ModifyingMXRecord(
+	ctx context.Context,
+	domainName, host, currentValue, newValue string,
+	ttl, priority int,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -438,7 +461,7 @@ func (d *dns) ModifyingMXRecord(domainName, host, currentValue, newValue string,
 	data.Add("ttl", strconv.Itoa(ttl))
 	data.Add("priority", strconv.Itoa(priority))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-mx-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-mx-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +488,7 @@ func (d *dns) ModifyingMXRecord(domainName, host, currentValue, newValue string,
 	return &result, nil
 }
 
-func (d *dns) ModifyingNSRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
+func (d *dns) ModifyingNSRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -473,7 +496,7 @@ func (d *dns) ModifyingNSRecord(domainName, host, currentValue, newValue string,
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-ns-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -500,7 +523,7 @@ func (d *dns) ModifyingNSRecord(domainName, host, currentValue, newValue string,
 	return &result, nil
 }
 
-func (d *dns) ModifyingTXTRecord(domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
+func (d *dns) ModifyingTXTRecord(ctx context.Context, domainName, host, currentValue, newValue string, ttl int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -508,7 +531,7 @@ func (d *dns) ModifyingTXTRecord(domainName, host, currentValue, newValue string
 	data.Add("new-value", newValue)
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-txt-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-txt-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -535,7 +558,11 @@ func (d *dns) ModifyingTXTRecord(domainName, host, currentValue, newValue string
 	return &result, nil
 }
 
-func (d *dns) ModifyingSRVRecord(domainName, host, currentValue, newValue string, ttl, priority, port, weight int) (*StdResponse, error) {
+func (d *dns) ModifyingSRVRecord(
+	ctx context.Context,
+	domainName, host, currentValue, newValue string,
+	ttl, priority, port, weight int,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -546,7 +573,7 @@ func (d *dns) ModifyingSRVRecord(domainName, host, currentValue, newValue string
 	data.Add("port", strconv.Itoa(port))
 	data.Add("weight", strconv.Itoa(weight))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-srv-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-srv-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -573,7 +600,11 @@ func (d *dns) ModifyingSRVRecord(domainName, host, currentValue, newValue string
 	return &result, nil
 }
 
-func (d *dns) ModifyingSOARecord(domainName, responsiblePerson string, refresh, retry, expire, ttl int) (*StdResponse, error) {
+func (d *dns) ModifyingSOARecord(
+	ctx context.Context,
+	domainName, responsiblePerson string,
+	refresh, retry, expire, ttl int,
+) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("responsible-person", responsiblePerson)
@@ -582,7 +613,7 @@ func (d *dns) ModifyingSOARecord(domainName, responsiblePerson string, refresh, 
 	data.Add("expire", strconv.Itoa(expire))
 	data.Add("ttl", strconv.Itoa(ttl))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/update-soa-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/update-soa-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -610,6 +641,7 @@ func (d *dns) ModifyingSOARecord(domainName, responsiblePerson string, refresh, 
 }
 
 func (d *dns) SearchingDNSRecords(
+	ctx context.Context,
 	domainName string,
 	typeRecord RecordType,
 	noOfRecords, pageNo int,
@@ -623,7 +655,7 @@ func (d *dns) SearchingDNSRecords(
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "dns", "manage/search-records", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "dns", "manage/search-records", data)
 	if err != nil {
 		return nil, err
 	}
@@ -679,12 +711,12 @@ func (d *dns) SearchingDNSRecords(
 	return &records, nil
 }
 
-func (d *dns) DeletingDNSRecord(host, value string) (*StdResponse, error) {
+func (d *dns) DeletingDNSRecord(ctx context.Context, host, value string) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodGet, "dns", "manage/delete-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodGet, "dns", "manage/delete-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -711,46 +743,13 @@ func (d *dns) DeletingDNSRecord(host, value string) (*StdResponse, error) {
 	return &result, nil
 }
 
-func (d *dns) DeletingIPv4AddressRecord(domainName, host, value string) (*StdResponse, error) {
-	data := make(url.Values)
-	data.Add("domain-name", domainName)
-	data.Add("host", host)
-	data.Add("value", value)
-
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-ipv4-record", data)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	bytesResp, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		errResponse := core.JSONStatusResponse{}
-		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
-			return nil, err
-		}
-		return nil, errors.New(strings.ToLower(errResponse.Message))
-	}
-
-	var result StdResponse
-	if err := json.Unmarshal(bytesResp, &result); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
-}
-
-func (d *dns) DeletingIPv6AddressRecord(domainName, host, value string) (*StdResponse, error) {
+func (d *dns) DeletingIPv4AddressRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-ipv6-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-ipv4-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -777,13 +776,13 @@ func (d *dns) DeletingIPv6AddressRecord(domainName, host, value string) (*StdRes
 	return &result, nil
 }
 
-func (d *dns) DeletingCNAMERecord(domainName, host, value string) (*StdResponse, error) {
+func (d *dns) DeletingIPv6AddressRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-cname-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-ipv6-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -810,13 +809,13 @@ func (d *dns) DeletingCNAMERecord(domainName, host, value string) (*StdResponse,
 	return &result, nil
 }
 
-func (d *dns) DeletingMXRecord(domainName, host, value string) (*StdResponse, error) {
+func (d *dns) DeletingCNAMERecord(ctx context.Context, domainName, host, value string) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-mx-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-cname-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -843,13 +842,13 @@ func (d *dns) DeletingMXRecord(domainName, host, value string) (*StdResponse, er
 	return &result, nil
 }
 
-func (d *dns) DeletingNSRecord(domainName, host, value string) (*StdResponse, error) {
+func (d *dns) DeletingMXRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-ns-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-mx-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -876,13 +875,13 @@ func (d *dns) DeletingNSRecord(domainName, host, value string) (*StdResponse, er
 	return &result, nil
 }
 
-func (d *dns) DeletingTXTRecord(domainName, host, value string) (*StdResponse, error) {
+func (d *dns) DeletingNSRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
 	data.Add("value", value)
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-txt-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-ns-record", data)
 	if err != nil {
 		return nil, err
 	}
@@ -909,7 +908,40 @@ func (d *dns) DeletingTXTRecord(domainName, host, value string) (*StdResponse, e
 	return &result, nil
 }
 
-func (d *dns) DeletingSRVRecord(domainName, host, value string, port, weight int) (*StdResponse, error) {
+func (d *dns) DeletingTXTRecord(ctx context.Context, domainName, host, value string) (*StdResponse, error) {
+	data := make(url.Values)
+	data.Add("domain-name", domainName)
+	data.Add("host", host)
+	data.Add("value", value)
+
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-txt-record", data)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	bytesResp, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errResponse := core.JSONStatusResponse{}
+		if err := json.Unmarshal(bytesResp, &errResponse); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(strings.ToLower(errResponse.Message))
+	}
+
+	var result StdResponse
+	if err := json.Unmarshal(bytesResp, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (d *dns) DeletingSRVRecord(ctx context.Context, domainName, host, value string, port, weight int) (*StdResponse, error) {
 	data := make(url.Values)
 	data.Add("domain-name", domainName)
 	data.Add("host", host)
@@ -917,7 +949,7 @@ func (d *dns) DeletingSRVRecord(domainName, host, value string, port, weight int
 	data.Add("port", strconv.Itoa(port))
 	data.Add("weight", strconv.Itoa(weight))
 
-	resp, err := d.core.CallAPI(http.MethodPost, "dns", "manage/delete-srv-record", data)
+	resp, err := d.core.CallAPI(ctx, http.MethodPost, "dns", "manage/delete-srv-record", data)
 	if err != nil {
 		return nil, err
 	}
